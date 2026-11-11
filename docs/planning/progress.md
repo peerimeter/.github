@@ -18,7 +18,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 |---|---|---|
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/peers explicitly belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
-| 2 — Server + join bundles + sync | ⬜ Not started | |
+| 2 — Server + join bundles + sync | ⬜ Not started | Includes managed peer host-file entries with configurable `$hostName.$networkName` naming |
 | 3 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
 | 4 — Browser dashboard + GitHub SSO | ⬜ Not started | |
 | 5 — External WireGuard client gateway | ⬜ Not started | |
@@ -50,6 +50,8 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - [ ] `peerimeter-service` independent CI added at Phase 2.
 
 ## Additional requirements checklist
+
+- [ ] Phase 2: managed host-file DNS entries from peer names/network names using a configurable template and maintained Go hosts-file library; preserve unrelated entries and safely reconcile lifecycle changes cross-platform.
 
 - [x] P0 static JSON schema versioning, validation and protected local key references.
 - [x] `peerimeter-agent run --config <path>` makes no API/MQTT/STUN calls.
