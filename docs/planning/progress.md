@@ -4,23 +4,26 @@
 
 ## Current status
 
-- **Active phase:** Phase 1 — Native offline agent runtime and local status/service lifecycle (in progress); Phase 0 complete
+- **Active phase:** 🔄 Phase 1 — Native offline agent runtime and local status/service lifecycle (in progress); Phase 0 complete
 - **Last verified milestone:** Phase 0 static-config/build/unit/CLI baseline passed natively with Go 1.27.4 on all three OSes; real WireGuard backend feasibility also passed (2026-11-11).
 - **Repositories:** `peerimeter-agent` (P0/P1, first); `peerimeter-service` (Phase 2 onward). Two independent Git repositories.
 - **Next action:** Implement Phase 1 native agent adapters/IPC and service lifecycle to make run/status/peers operational; preserve the tested static validation and key contract.
 
 ## Phase checklist
 
+**Phase status:** ✅ Complete · 🔄 In progress · ⬜ Not started · ⛔ Blocked.
+A passed test alone does not mean the phase is complete; Phase 1 and later also require the independent review gate.
+
 | Phase | Status | Verification / notes |
 |---|---|---|
-| 0 — Cross-platform baseline + static JSON | Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/peers explicitly belong to Phase 1 |
-| 1 — Offline WireGuard on Linux/macOS/Windows | In progress | All three OSes must work without API using static JSON; Linux interface naming from `additional-plan.md` |
-| 2 — Server + join bundles + sync | Not started | |
-| 3 — NAT traversal + self-healing | Not started | Direct connections only; no relay |
-| 4 — Browser dashboard + GitHub SSO | Not started | |
-| 5 — External WireGuard client gateway | Not started | |
-| 6 — Cross-platform resilience + packaging | Not started | |
-| 7 — Release and hardening | Not started | |
+| 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/peers explicitly belong to Phase 1 |
+| 1 — Offline WireGuard on Linux/macOS/Windows | 🔄 In progress | All three OSes must work without API using static JSON; Linux interface naming from `additional-plan.md` |
+| 2 — Server + join bundles + sync | ⬜ Not started | |
+| 3 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
+| 4 — Browser dashboard + GitHub SSO | ⬜ Not started | |
+| 5 — External WireGuard client gateway | ⬜ Not started | |
+| 6 — Cross-platform resilience + packaging | ⬜ Not started | |
+| 7 — Release and hardening | ⬜ Not started | |
 
 ## Two-repository checklist
 
