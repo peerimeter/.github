@@ -51,7 +51,8 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 ## Additional requirements checklist
 
-- [ ] Phase 2: managed host-file DNS entries from peer names/network names using a configurable template and maintained Go hosts-file library; preserve unrelated entries and safely reconcile lifecycle changes cross-platform.
+- [ ] Phase 2: managed host-file DNS entries from peer names/network names using a configurable template and maintained Go hosts-file library; entries must map to the peer's WireGuard tunnel address(es), preserve unrelated content and reconcile lifecycle changes cross-platform.
+- [ ] Phase 3: separately discover/exchange same-LAN agents' internal/private-underlay addresses and use reachable ones as peer endpoints; this is distinct from host-file DNS entries, which resolve names to WireGuard tunnel addresses.
 
 - [x] P0 static JSON schema versioning, validation and protected local key references.
 - [x] `peerimeter-agent run --config <path>` makes no API/MQTT/STUN calls.

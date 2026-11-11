@@ -570,17 +570,18 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 - [ ] `peerimeter-agent join --token <bundle>` decodes, validates URL/expiry as applicable, exchanges enrollment secret for device credentials and downloads initial managed configuration; never requires separate `--server`.
 - [ ] Preserve static mode; online/managed mode must reuse the same WG reconciler and OS adapters.
 - [ ] Integrate MQTT/TLS notifications and periodic API re-sync; test offline and missed-event reconciliation.
-- [ ] Add managed custom DNS host mappings to the agent using a maintained Go hosts-file library. Derive each peer's hostname from a configurable template such as `$hostName.$networkName`, map it to the peer's configured mesh IP, and synchronize changes when peers join, rename, change address, or leave. Only edit an agent-owned marked block; preserve unrelated hosts-file content, make updates idempotent and atomic, validate DNS labels/templates and address conflicts, and remove only managed entries on leave/uninstall. Verify permissions, restart recovery and behavior on Linux, macOS and Windows; clearly report when required privileges prevent an update.
+- [ ] Add managed host-file entries for peer DNS names using a maintained Go hosts-file library. Derive each peer's hostname from a configurable template such as `$hostName.$networkName` and map it to that peer's **WireGuard tunnel address(es)** from its configured interface addresses. Do not put LAN/private-underlay addresses in these entries. Synchronize changes when peers join, rename, change WireGuard address, or leave. Only edit an agent-owned marked block; preserve unrelated hosts-file content, make updates idempotent and atomic, validate DNS labels/templates and address conflicts, and remove only managed entries on leave/uninstall. Verify permissions, restart recovery and behavior on Linux, macOS and Windows; clearly report when required privileges prevent an update.
 
-**Done when:** agents can be onboarded with one join bundle (no server argument), automatically reconcile managed configuration and peer DNS host mappings, while static JSON agents still operate independently.
+**Done when:** agents can be onboarded with one join bundle (no server argument), automatically reconcile managed configuration and peer DNS host mappings to WireGuard tunnel addresses, while static JSON agents still operate independently.
 
 ### Phase 3 — STUN, direct NAT traversal, self-healing (critical path)
 - [ ] Validate STUN socket mapping versus actual WG source port on every relevant backend.
-- [ ] Implement candidate discovery/exchange, dynamic endpoint updates, network events, health probes and recoverable state machine.
+- [ ] Discover each agent's LAN/private-underlay addresses separately from its WireGuard tunnel addresses; exchange and select reachable same-LAN addresses as direct peer endpoints, with tests proving same-network peers use their internal addresses when available.
+- [ ] Implement public/relay candidate discovery and exchange, dynamic endpoint updates, network events, health probes and recoverable state machine.
 - [ ] Test public IP/port changes, packet loss, sleep/wake, control-plane outages and failed direct connections.
 - [ ] Keep **no relay** policy; report unsupported NAT/firewall cases transparently.
 
-**Done when:** documented IP-change scenarios recover autonomously where direct connectivity is feasible.
+**Done when:** same-LAN peers can discover and use reachable internal endpoints, and documented public-IP/port-change scenarios recover autonomously where direct connectivity is feasible.
 
 ### Phase 4 — Browser dashboard and GitHub SSO
 - [ ] React/TypeScript dashboard with OAuth, network management, enrollment-token generation and peer graph.
