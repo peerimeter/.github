@@ -18,6 +18,8 @@ Examples (subject to Linux interface naming limits):
 
 Linux network interface names must be **at most 15 bytes** (not characters) and must not be empty or contain forbidden characters (notably `/`, `:`, whitespace); use a conservative ASCII-safe set for generated names. Never blindly concatenate an arbitrary user-supplied network name to `pm-` and pass it to the OS.
 
+Keep the `pm-` build-time default in a single named constant (`ifname.DefaultPrefix`); calculate available slug bytes from its length. Existing persisted names remain authoritative.
+
 Implement a single, deterministic function to derive the default name:
 
 1. Use `pm-` + an ASCII-safe normalized version of the Peerimeter network display name.
@@ -165,13 +167,13 @@ peerimeter-agent run --config ./peerimeter.static.json --interface wg-prod
 
 ### Cross-platform acceptance gates
 
-- [ ] `go test ./...` and build succeed on Linux, macOS and Windows CI runners.
-- [ ] Real WireGuard adapter can create tunnel, set IP, add peer, configure route and clean up on each OS.
-- [ ] At least two agents connect using only static JSON, confirmed with actual WireGuard handshake and traffic, no API server.
-- [ ] Continuous daemon/service startup, shutdown, restart and status work on all three OSes.
-- [ ] Linux generated/custom interface names and collisions are covered by tests.
-- [ ] Cross-OS scenarios (Linux <-> Windows, Linux <-> macOS, Windows <-> macOS, where available) are tested or explicitly left unverified rather than marked complete.
-- [ ] No use of server enrollment, MQTT or STUN in the static agent execution path.
+- [x] `go test ./...` and build succeed on Linux, macOS and Windows CI runners.
+- [x] Real WireGuard adapter can create tunnel, set IP, add peer, configure route and clean up on each OS.
+- [x] At least two agents connect using only static JSON, confirmed with actual WireGuard handshake and traffic, no API server. Verified with two isolated Linux agents; macOS/Windows native agent links use an independent userspace WireGuard reference peer. Mixed-OS agent pairs remain explicitly unverified.
+- [x] Continuous daemon/service startup, shutdown, restart and status work on all three OSes.
+- [x] Linux generated/custom interface names and collisions are covered by tests.
+- [x] Cross-OS scenarios (Linux <-> Windows, Linux <-> macOS, Windows <-> macOS, where available) are tested or explicitly left unverified rather than marked complete.
+- [x] No use of server enrollment, MQTT or STUN in the static agent execution path.
 
 ## A5. Later managed enrollment: one Base64URL(JSON) join token, including API URL
 
@@ -261,3 +263,30 @@ Record findings, fixes, evidence, deferred non-blocking items and the final revi
 outcome in progress.md. Independent review supplements native tests and never
 substitutes for real tunnel/traffic verification. A phase with open correctness,
 security or acceptance blockers remains in progress.
+
+## A10. Phase 1: refactored wgshow-style peer listing
+
+Use [the requested wgshow example](https://github.com/zer0go/wgctrl-go/blob/47ad6fc7d7a95296fe893b49c1d4584b4eb6ac40/cmd/wgshow/main.go)
+as the reference for human-readable WireGuard device/peer presentation. The
+reviewed file revision is `47ad6fc7d7a95296fe893b49c1d4584b4eb6ac40` (MIT-licensed).
+Refactor the relevant formatting into testable agent code; do not embed the
+example main/flag/log.Fatal structure or introduce a second CLI parser.
+
+- `peers` should provide wgshow-style human-readable output, with `--json` for
+  stable machine-readable data. Keep the Cobra command in its own source file
+  and separate state acquisition, formatting, color policy and I/O.
+- Read actual authorized local agent/backend snapshots on Linux, macOS and
+  Windows. Do not bypass daemon ownership by opening a competing WireGuard
+  manager or assume direct wgctrl access works identically on every platform.
+- Display the selected network/interface, public peer identity, endpoint,
+  AllowedIPs, latest handshake age, received/sent bytes and persistent keepalive.
+  Private/preshared keys must never enter the renderer or diagnostic output.
+- Refactor unsafe assumptions: absent endpoints, never-handshaken/future-clock
+  timestamps, zero/disabled keepalive, empty peer lists, large byte counters and
+  singular/plural durations must render clearly without panic or fabricated
+  connectivity. Honor NO_COLOR, redirected output and explicit color controls.
+- Preserve applicable copyright/license attribution when adapting code. Add
+  focused renderer tests, plain/color/JSON CLI tests and native integration
+  assertions against real backend state. Existing automation must opt into
+  `peers --json` when parsing peer data. This task is pending until implemented
+  and reviewed; adding the requirement is not evidence of completion.
