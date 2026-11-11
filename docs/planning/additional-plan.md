@@ -249,3 +249,15 @@ GitHub Actions is required **from Phase 0**, within `peerimeter-agent` (not in a
 Secure CI: use temporary WireGuard keys, least-privilege GitHub token permissions, bounded timeouts and teardown; keep secrets out of logs/artifacts. Do not expose a privileged private test network to untrusted pull requests. `peerimeter-service` later receives its own independent API/web GitHub Actions workflows.
 
 **Update `progress.md` after each CI run and milestone with the per-platform matrix and links to results; keep Phase 0 focused on the offline agent rather than building an API to make CI pass.**
+
+## A9. Mandatory phase-end independent review
+
+Before closing the ongoing Phase 1 or any later phase, run a separate review
+agent against the phase contract, final implementation and actual test evidence.
+The reviewer must not be the author of the reviewed changes. It may use a different
+model if available; report the actual reviewer/model and reviewed code SHA.
+Resolve blocking findings, rerun affected tests and obtain follow-up verification.
+Record findings, fixes, evidence, deferred non-blocking items and the final review
+outcome in progress.md. Independent review supplements native tests and never
+substitutes for real tunnel/traffic verification. A phase with open correctness,
+security or acceptance blockers remains in progress.

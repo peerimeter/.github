@@ -17,6 +17,8 @@
 9. Document what genuinely works per OS. Do not label Windows/macOS support complete until verified with real platform-specific integration tests.
 10. **Do not expand the scope** to desktop apps, mobile apps, relay, exit nodes, MagicDNS, Kubernetes, HA, or sophisticated service-level ACLs unless explicitly requested later.
 11. If implementing everything in one run is not feasible, finish the current coherent phase, update the progress checklist in this document, and summarize remaining work. Do not silently claim phases are complete.
+12. **Mandatory phase-end independent review:** Before marking any phase complete from this point onward, run a separate review agent that did not implement the changes it reviews. Give it the phase requirements, final code/diff, tested commit SHA, native test evidence and documented limitations. A different model may be used when available; record the actual reviewer/model rather than assuming model diversity. Review requirement coverage, correctness, security, lifecycle/cleanup, tests and accuracy of documentation/status claims. Fix findings that block correctness, security or phase acceptance, rerun affected checks, and have the reviewer verify those fixes. Record the reviewed SHA, findings, resolutions, remaining explicitly deferred items and final review outcome in progress.md. Do not mark a phase complete while blocking findings remain; do not represent self-review or a passing CI job as an independent agent review. This gate applies to the ongoing Phase 1 and subsequent phases; earlier Phase 0 evidence remains historical.
+
 
 ## 1. Product goals and non-goals
 

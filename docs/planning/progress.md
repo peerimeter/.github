@@ -4,7 +4,7 @@
 
 ## Current status
 
-- **Active phase:** Phase 1 — Native offline agent runtime and local status/service lifecycle (not started); Phase 0 complete
+- **Active phase:** Phase 1 — Native offline agent runtime and local status/service lifecycle (in progress); Phase 0 complete
 - **Last verified milestone:** Phase 0 static-config/build/unit/CLI baseline passed natively with Go 1.27.4 on all three OSes; real WireGuard backend feasibility also passed (2026-11-11).
 - **Repositories:** `peerimeter-agent` (P0/P1, first); `peerimeter-service` (Phase 2 onward). Two independent Git repositories.
 - **Next action:** Implement Phase 1 native agent adapters/IPC and service lifecycle to make run/status/peers operational; preserve the tested static validation and key contract.
@@ -14,7 +14,7 @@
 | Phase | Status | Verification / notes |
 |---|---|---|
 | 0 — Cross-platform baseline + static JSON | Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/peers explicitly belong to Phase 1 |
-| 1 — Offline WireGuard on Linux/macOS/Windows | Not started | All three OSes must work without API using static JSON; Linux interface naming from `additional-plan.md` |
+| 1 — Offline WireGuard on Linux/macOS/Windows | In progress | All three OSes must work without API using static JSON; Linux interface naming from `additional-plan.md` |
 | 2 — Server + join bundles + sync | Not started | |
 | 3 — NAT traversal + self-healing | Not started | Direct connections only; no relay |
 | 4 — Browser dashboard + GitHub SSO | Not started | |
@@ -139,3 +139,11 @@ Phase 0 is complete against the clarified criteria, supported by native CI at
 `ebb4a1f880e39e2ca1003d9551c185a76ee81069` (run links above). No implementation or
 test result changed in this documentation correction. Phase 1 remains not started;
 there is no claim of working agent tunnels, IPC or service management.
+
+## Phase 1 review gate — requested 2026-11-11
+
+Added a mandatory independent agent review before closing the ongoing Phase 1
+and every subsequent phase. A different model is optional; record the actual
+reviewer/model, reviewed SHA, findings, fixes and final outcome. Blocking findings
+must be resolved and affected tests rerun. Phase 1 review is pending; the phase
+is not complete. Native runtime implementation and its CI are in progress.
