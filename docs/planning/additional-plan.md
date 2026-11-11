@@ -264,7 +264,11 @@ outcome in progress.md. Independent review supplements native tests and never
 substitutes for real tunnel/traffic verification. A phase with open correctness,
 security or acceptance blockers remains in progress.
 
-## A10. Phase 1: refactored wgshow-style peer listing
+## A10. Phase 1: standalone STUN command
+
+Add a Cobra `stun` command based on the requested [netguard-client example](https://github.com/zer0go/netguard-client/blob/develop/cmd/stun.go), refactored to Peerimeter conventions. Accept an optional UDP port: use that exact available port when supplied, otherwise bind port 0 and report the OS-assigned port. Return the observed mapped address/port and the local port in structured output; reject invalid ports and close sockets on every exit path. Verify both modes natively on all three OSes. STUN mapping is diagnostic groundwork and must not be presented as successful peer connectivity or automatic NAT recovery.
+
+## A11. Phase 1: refactored wgshow-style peer listing
 
 Use [the requested wgshow example](https://github.com/zer0go/wgctrl-go/blob/47ad6fc7d7a95296fe893b49c1d4584b4eb6ac40/cmd/wgshow/main.go)
 as the reference for human-readable WireGuard device/peer presentation. The

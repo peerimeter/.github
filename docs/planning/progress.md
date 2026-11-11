@@ -261,3 +261,8 @@ fixture-tested with actual native packages). These limits belong to the later
 network/resilience/release work and are not claims of verified connectivity.
 
 ✅ Phase 0 complete · ✅ Phase 1 complete · ⬜ Phase 2 not started.
+
+## Phase 1 add-on — STUN command
+
+Added a requirement for a standalone Cobra STUN command with selected or OS-assigned UDP port, observable mapped endpoint, cleanup and native tests on all three platforms. Implementation remains pending; this does not change the Phase 1 completion record for the preceding accepted scope.
+

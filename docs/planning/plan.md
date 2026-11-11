@@ -6,6 +6,12 @@
 
 ## 0. Operating instructions for Codex
 
+### Agent responsibilities
+
+- **Implementation:** Luna.
+- **Phase planning and independent review:** Sol.
+- Keep review separate from the implementation author. Record the actual reviewer/model and reviewed SHA in `progress.md`; do not retroactively attribute earlier reviews to a model that was not identified.
+
 1. Inspect both repository directories first (if present). Preserve existing decisions and code unless they conflict with this plan. If the repository is empty, initialize it according to the structure below.
 2. Work **phase by phase** and in small, reviewable changes. **First deliver static-JSON, API-free direct WireGuard connectivity on Linux, macOS, and Windows** before implementing the server, enrollment, MQTT, STUN or browser UI.
 3. Before each phase: briefly state the goal, files/modules to change, tests to add, and important risks. After each phase: run relevant tests and report outcomes, limitations, and next steps.
@@ -538,6 +544,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 **Done when:** static configuration and protected key references validate offline; native build, unit/CLI tests and validation pass on all three target OS runners; platform/lifecycle interfaces are testable; and native WireGuard backend feasibility is attempted and truthfully recorded per OS. Operational tunnel/service commands are a Phase 1 acceptance requirement, so Phase 0 has no dependency on their implementation. A cross-compiled build alone is **not** native verification.
 
 ### Phase 1 — Fully offline direct WireGuard on Linux, macOS, Windows (P0)
+- [ ] Add a Cobra `stun` command, following the structure of [`netguard-client/cmd/stun.go`](https://github.com/zer0go/netguard-client/blob/develop/cmd/stun.go), adapted to Peerimeter. Bind STUN requests to a user-selected UDP port or an OS-assigned random available port; report the observed public endpoint and bound local port. Validate port input, make socket lifetime/cleanup explicit, and test selected-port and random-port behavior on Linux, macOS and Windows. This command reports STUN mapping only; it does not claim WireGuard connectivity or implement relay/NAT recovery.
 - [x] Refactor and adapt the peer/device presentation from [`zer0go/wgctrl-go/cmd/wgshow/main.go`](https://github.com/zer0go/wgctrl-go/blob/47ad6fc7d7a95296fe893b49c1d4584b4eb6ac40/cmd/wgshow/main.go) for the agent's peer listing. Keep rendering separate from OS access/Cobra handlers, preserve required MIT attribution, use protected local IPC plus the existing native backend snapshots on all three OSes, and retain `peers --json`. Show actual interface/public peer key, endpoint, AllowedIPs, handshake age, received/sent bytes and keepalive with terminal-aware colors/plain output; never expose private or preshared keys. See additional-plan.md A10 for edge cases and tests.
 - [x] Use Cobra for agent subcommands, flags/arguments, contextual help and shell completion. Pin its verified stable version (initially `github.com/spf13/cobra v1.10.2`), place root and individual commands in separate source files following the cobra-cli layout pattern, preserve structured/redacted errors and do not add a second argument parser. A future library replacement requires an explicit documented choice rather than chasing newer libraries.
 - [x] Make `version` display an ASCII adaptation of the project logo with terminal-aware pink/purple color and version/platform/Go metadata. Support plain output/NO_COLOR and `version --json` for machine-readable consumers; CI and installer scripts must use --json when parsing metadata.
