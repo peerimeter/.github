@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090711">
+  <meta name="description" content="Peerimeter is an offline-first WireGuard mesh agent for Linux, macOS and Windows.">
+  <title>Peerimeter — Direct WireGuard mesh</title>
+  <style>
+    :root { color-scheme: dark; --bg:#090711; --panel:#12101d; --line:#292238; --text:#f7f3ff; --muted:#aaa3bc; --pink:#ff2d91; --purple:#a833ff; --green:#71e0b2; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(ellipse at 50% -30%,#35134c 0,transparent 55%),var(--bg); color:var(--text); font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif; }
+    a { color:#e3a3ff; } a:hover { color:#fff; }
+    .wrap { width:min(100% - 40px,1000px); margin:auto; }
+    header { padding:42px 0 20px; display:flex; justify-content:center; }
+    header img { width:min(620px,90vw); height:auto; }
+    .hero { text-align:center; padding:24px 0 54px; }
+    h1 { font-size:clamp(2.2rem,6vw,4.3rem); line-height:1.08; margin:0 auto 18px; letter-spacing:-.045em; }
+    h1 span { background:linear-gradient(100deg,var(--pink),#f35dce,var(--purple)); color:transparent; background-clip:text; }
+    .lead { color:var(--muted); max-width:680px; margin:0 auto 26px; font-size:1.15rem; }
+    .actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+    .button { display:inline-block; padding:11px 18px; border:1px solid #54336d; border-radius:10px; background:#20152d; color:white; text-decoration:none; font-weight:650; }
+    .button.primary { border:0; background:linear-gradient(100deg,#ed218a,#8d35e8); }
+    .status { max-width:760px; margin:0 auto 42px; padding:14px 18px; border:1px solid #60481c; border-radius:10px; background:#211a10; color:#e9d6a6; }
+    .status strong { color:#fff0be; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:0 0 46px; }
+    .card { border:1px solid var(--line); border-radius:14px; background:linear-gradient(145deg,#151220,#100e18); padding:22px; }
+    h2 { font-size:1.3rem; margin:0 0 8px; }
+    .card p,.small { color:var(--muted); }
+    code,pre { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+    pre { overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; border:1px solid #302840; border-radius:9px; background:#09080e; padding:14px; color:#f2ddff; font-size:.86rem; }
+    .platform { margin-bottom:16px; }
+    .platform h3 { font-size:1rem; margin:0 0 6px; }
+    footer { border-top:1px solid var(--line); color:var(--muted); padding:22px 0 38px; font-size:.9rem; }
+    @media(max-width:760px) { .grid{grid-template-columns:1fr} header{padding-top:28px}.hero{padding-top:16px} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><img src="assets/peerimeter-logo.png" alt="Peerimeter"></header>
+    <main>
+      <section class="hero">
+        <h1>A direct mesh.<br><span>Your keys stay yours.</span></h1>
+        <p class="lead">A headless WireGuard agent for Linux, macOS and Windows. Configure peers locally and connect directly, without a required control plane or relay.</p>
+        <div class="actions">
+          <a class="button primary" href="#install">Install the agent</a>
+          <a class="button" href="https://github.com/peerimeter/peerimeter-agent">View source</a>
+        </div>
+      </section>
+      <aside class="status"><strong>Release status:</strong> the installer endpoints are being prepared. A public agent release has not been published yet, so installation will become available with the first release.</aside>
+      <section class="grid" aria-label="Platform support">
+        <article class="card"><h2>Linux</h2><p>Kernel WireGuard and systemd. Install the agent with the shell script.</p></article>
+        <article class="card"><h2>macOS</h2><p>Native utun through the embedded WireGuard backend, managed by launchd.</p></article>
+        <article class="card"><h2>Windows</h2><p>Bundled signed WireGuardNT driver and native Windows Service.</p></article>
+      </section>
+      <section id="install" class="card">
+        <h2>Install Peerimeter Agent</h2>
+        <p class="small">Installers verify release checksums. Choose a version and install path with the documented script options.</p>
+        <div class="platform">
+          <h3>Linux</h3>
+          <pre>curl -fsSLo install.sh https://agent.peerimeter.app/install.sh
+chmod +x install.sh
+sudo ./install.sh</pre>
+        </div>
+        <div class="platform">
+          <h3>macOS</h3>
+          <pre>curl -fsSLo install.sh https://agent.peerimeter.app/install.sh
+chmod +x install.sh
+sudo ./install.sh</pre>
+        </div>
+        <div class="platform">
+          <h3>Windows PowerShell (Run as Administrator)</h3>
+          <pre>Invoke-WebRequest https://agent.peerimeter.app/install.ps1 -OutFile install.ps1
+.\install.ps1</pre>
+        </div>
+        <p class="small">Custom version and destination: <code>./install.sh --version vX.Y.Z --install-dir /absolute/path</code> or <code>./install.ps1 -Version vX.Y.Z -InstallDir 'C:\Tools\Peerimeter'</code>.</p>
+      </section>
+    </main>
+    <footer>Peerimeter is open source. <a href="https://github.com/peerimeter">GitHub organization</a> · <a href="https://github.com/peerimeter/peerimeter-agent/blob/main/README.md">Agent documentation</a></footer>
+  </div>
+</body>
+</html>
