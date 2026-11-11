@@ -200,6 +200,8 @@ peerimeter-agent service install
 peerimeter-agent service start
 peerimeter-agent service stop
 peerimeter-agent service uninstall
+peerimeter-agent uninstall --dry-run
+peerimeter-agent uninstall
 peerimeter-agent status
 peerimeter-agent peers
 peerimeter-agent sync
@@ -215,6 +217,30 @@ peerimeter-agent version
 - Service manager: systemd / launchd / Windows Service. Boot activation and restart-on-failure policies must be explicit.
 - Privileged agent controls routing and WG; CLI/UI do not require long-lived root/admin identity.
 - Agent service's startup mode must remain independent of the browser/dashboard.
+
+### Agent configuration, state and runtime directories (mandatory from Phase 1)
+
+Keep administrator-managed configuration and protected keys separate from mutable persistent state and disposable runtime files. Use these machine-wide defaults:
+
+| Platform | Configuration and protected keys (`--config-dir`) | Persistent agent state (`--state-dir`) | Runtime files (`--runtime-dir`) |
+|---|---|---|---|
+| Linux | `/etc/peerimeter/` | `/var/lib/peerimeter-agent/` | `/run/peerimeter-agent/` |
+| macOS | `/etc/peerimeter/` | `/Library/Application Support/Peerimeter/` | `/var/run/peerimeter-agent/` |
+
+- Configuration includes the installed static JSON and its referenced private key (currently `service.json` and `service.key`). Persistent state includes the selected local interface name, ownership identity and other restart-recovery metadata. Runtime files include the local control socket and process coordination files; they must not contain the only copy of durable identity or credentials.
+- Support explicit absolute `--config-dir`, `--state-dir` and `--runtime-dir` overrides where relevant. Retain `run --config <file>` for directly supplied static JSON; it must not silently copy or relocate the operator's original files. Document precedence between explicit `--config`, the installed configuration directory and platform defaults.
+- Service installation must place protected configuration/key snapshots in the configuration directory and persist the selected paths in systemd/launchd registration. Local control commands must locate the same runtime instance, including custom directories. Prevent competing managers for the same persistent state even when different runtime-directory overrides are supplied.
+- Only the privileged agent may modify installed configuration, keys and persistent ownership state. Authorized local operators may access the control channel without gaining access to private keys. Recreate runtime directories safely after reboot; stopping/uninstalling a service removes its owned runtime resources while preserving configuration, keys and durable state.
+- Migrate the initial combined-directory layout safely: preserve existing keys, configuration and interface identity, validate ownership/permissions before using the new locations, and never silently overwrite conflicting files. Account for macOS's root-owned `/etc` and `/var` system symlinks when validating canonical paths. Keep Windows's platform-specific storage defaults; this Unix layout change does not relocate Windows files.
+- Verify default and custom paths (including spaces), permissions/operator access, restart/reboot directory recreation, migration and teardown on native Linux/macOS runners. Update installer/service behavior and README examples together; directory separation is a Phase 1 acceptance requirement, not a claim about the current implementation.
+
+### Complete agent uninstall (mandatory from Phase 1)
+
+- Provide a top-level `peerimeter-agent uninstall` command on Linux, macOS and Windows that completely removes the selected agent installation and its managed data. Remove installed configuration, private keys, credentials, interface-selection/ownership state, lock/PID/socket files, managed logs/caches, service configuration/registration, installed executable and agent-owned bundled files. Document clearly that this command deletes the installed identity and configuration; `--dry-run` must list the resources that would be removed without changing them.
+- Stop the running agents/services first, disable boot activation and restart policies, wait for graceful native tunnel/route cleanup, and then remove the owned systemd unit, launchd plist or Windows SCM registration. Remove residual interfaces/routes/firewall rules only when ownership is verified. Never unlink a live manager's lock and treat that as proof the manager has stopped; refuse or report incomplete removal when shutdown cannot be established.
+- Track installation-owned resources and custom configuration/state/runtime/install paths in a protected installation inventory. Support the applicable directory overrides during removal and clean up tracked profiles/resources belonging to that installation. Never recursively delete an arbitrary custom/shared parent directory, follow an untrusted symlink/reparse point, or delete unrelated files, interfaces, shared drivers or other applications' resources. Operator-supplied original source configs/keys outside the managed installation remain outside the deletion inventory.
+- Handle Windows executable/DLL file locks with a bounded removal helper after the agent exits; report pending or failed deletion accurately. Delete the agent's bundled WireGuardNT files without removing a shared system driver that another application still uses. Repeated uninstall must be safe and report already absent resources correctly; partial failures must identify what remains and permit retry.
+- Keep `service uninstall` as service-registration removal with configuration/key preservation. The top-level `uninstall` is the explicit full-removal operation. Document both commands and verify complete removal, custom paths, repeated/partial-failure retry and preservation of unrelated resources on all three native platforms. Do not claim successful full uninstall while tracked configuration, locks, service registration or program files remain.
 
 ### Agent internal interfaces (guide, not rigid signature)
 
@@ -519,6 +545,8 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 - [ ] Honor Linux `pm-$networkName` safe naming algorithm and `--interface` override; reject conflicts.
 - [ ] Run continuously headless; support graceful shutdown, safe restart/reconciliation and persistent local identity/selected interface.
 - [ ] Provide service install/start/stop/uninstall for systemd, launchd and Windows Service, with protected config path.
+- [ ] Separate Unix configuration/keys, persistent state and runtime resources using the platform defaults and `--config-dir`/`--state-dir`/`--runtime-dir` rules above; safely migrate the initial combined layout and natively verify service/CLI access, permissions and lifecycle with default/custom paths.
+- [ ] Implement complete `peerimeter-agent uninstall` with a read-only `--dry-run`, safe shutdown, service/boot-registration removal and deletion of all installation-owned configuration, keys, state, lock/socket/PID files and program files; natively verify default/custom paths, retry/idempotency and protection of unrelated resources on all three OSes.
 - [ ] Bundle the official signed WireGuardNT component with the Windows-agent installer and provision its driver with administrator privileges, without a separate WireGuard application or download; verify offline installation and real tunnel connectivity on a clean Windows runner.
 - [ ] Provide `install.sh` for Linux/macOS and `install.ps1` for Windows to install the latest stable published agent release by default. Detect OS/architecture automatically, with documented platform defaults for the installation directory. Support an explicit release version and installation directory: `install.sh --version <tag|latest> --install-dir <path>` and `install.ps1 -Version <tag|latest> -InstallDir <path>`. Resolve `latest` to one concrete release before downloading; install matching release artifacts without requiring Go or a source checkout. Verify artifact integrity/authenticity before installation, handle required privileges clearly, preserve existing protected keys/configuration, and keep the Windows WireGuardNT component bundled with the installation package. Verify default/latest installation, pinned-version installation and custom paths (including spaces) natively on all three OSes; fail clearly for unavailable releases, unsupported architectures or unwritable destinations. These are operator-invoked installers; automatic self-update remains Phase 7.
 - [ ] Reformat the agent README for clearer presentation and navigation: concise project/status introduction, platform support table, quick start, copyable Linux/macOS shell and Windows PowerShell installation examples (latest, explicit version and custom destination), configuration/key permissions, CLI/service usage, testing and current limitations. Use consistent headings, spacing and code blocks; describe only functionality actually verified at that milestone.
