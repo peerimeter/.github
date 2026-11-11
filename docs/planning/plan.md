@@ -500,11 +500,11 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 **MANDATORY ORDER:** Cross-platform static JSON agent comes first. Server API, database, MQTT, GitHub SSO, web dashboard and STUN are **not** prerequisites for the first working milestone. Follow the stronger, detailed requirements in `additional-plan.md` sections A4–A6.
 
 ### Phase 0 — `peerimeter-agent` repository baseline, cross-platform build and static config contract
-- [ ] Create Go module, lint/test/build tooling and OS adapter interfaces.
-- [ ] Define and validate versioned static JSON schema and test fixtures for two or more peers.
+- [x] Create Go module, lint/test/build tooling and OS adapter interfaces.
+- [x] Define and validate versioned static JSON schema and test fixtures for two or more peers.
 - [ ] Implement CLI `run --config`, `validate-config`, `status`, `peers`; separate foreground runtime from service management.
-- [ ] Add mandatory native GitHub Actions matrix (`ubuntu-24.04`, `macos-15`, `windows-2022`) for builds, unit/CLI tests and offline static JSON validation; add separate privileged integration and connectivity E2E workflows, with early backend feasibility checks per OS.
-- [ ] Establish key/secret file permissions and OS-specific handling, no credentials in logs.
+- [x] Add mandatory native GitHub Actions matrix (`ubuntu-24.04`, `macos-15`, `windows-2022`) for builds, unit/CLI tests and offline static JSON validation; add separate privileged integration and connectivity E2E workflows, with early backend feasibility checks per OS. Baseline and real backend feasibility passed on all three; agent integration and E2E remain Phase 1 work (see progress.md).
+- [x] Establish key/secret file permissions and OS-specific handling, no credentials in logs.
 
 **Done when:** static configuration validates offline, agent builds for all three OSes, and platform adapters have testable interfaces. A cross-compiled build alone is **not** runtime verification.
 
@@ -608,7 +608,7 @@ Update this section whenever a phase is finished or an important design constrai
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0 — Baseline | Not started | |
+| 0 — Baseline | In progress | Agent repo and static contract implemented; native verification tracked in progress.md |
 | 1 — Offline WG on Linux/macOS/Windows | Not started | |
 | 2 — Server + sync | Not started | |
 | 3 — NAT + self-healing | Not started | |

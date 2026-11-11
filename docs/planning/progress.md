@@ -1,19 +1,19 @@
 # Peerimeter — Implementation Progress
 
-> Living log for Codex CLI. Read `plan.md` and `additional-plan.md` first. Update this file after each coherent implementation task and each session. Entries below reflect **no verified implementation work yet**; inspect the repository before changing statuses.
+> Living log for Codex CLI. Read `plan.md` and `additional-plan.md` first. Update this file after each coherent implementation task and each session. Entries below record verified work and explicitly separate native backend feasibility from agent tunnel integration.
 
 ## Current status
 
 - **Active phase:** Phase 0 — Cross-platform baseline and static JSON contract
-- **Last verified milestone:** None
+- **Last verified milestone:** Phase 0 static-config/build/unit/CLI baseline passed natively with Go 1.27.4 on all three OSes; real WireGuard backend feasibility also passed (2026-11-11).
 - **Repositories:** `peerimeter-agent` (P0/P1, first); `peerimeter-service` (Phase 2 onward). Two independent Git repositories.
-- **Next action:** Inspect both repository directories; implement Phase 0, then build and natively verify offline static-JSON WireGuard on all three operating systems (Phase 1).
+- **Next action:** Implement Phase 1 native agent adapters/IPC and service lifecycle to make run/status/peers operational; preserve the tested static validation and key contract.
 
 ## Phase checklist
 
 | Phase | Status | Verification / notes |
 |---|---|---|
-| 0 — Cross-platform baseline + static JSON | Not started | |
+| 0 — Cross-platform baseline + static JSON | In progress | Independent agent repo, strict config/key handling, CLI validation, interfaces and native CI verified on all three; operational run/status/peers await Phase 1 native/IPC backends |
 | 1 — Offline WireGuard on Linux/macOS/Windows | Not started | All three OSes must work without API using static JSON; Linux interface naming from `additional-plan.md` |
 | 2 — Server + join bundles + sync | Not started | |
 | 3 — NAT traversal + self-healing | Not started | Direct connections only; no relay |
@@ -24,7 +24,7 @@
 
 ## Two-repository checklist
 
-- [ ] `peerimeter-agent` initialized with independent `.git`, `go.mod`, and CI.
+- [x] `peerimeter-agent` initialized with independent `.git`, `go.mod`, and CI.
 - [ ] `peerimeter-service` initialized separately at Phase 2 with independent `.git`, `go.mod`, and CI.
 - [ ] Cross-repo versioned HTTP/JSON and MQTT contracts defined and tested without relative module imports.
 - [ ] Record tested commit hash and status for each repository.
@@ -35,20 +35,20 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 | OS runner | Build + unit + static JSON (`ci.yml`) | Real WG handshake + traffic (`wireguard-integration.yml`) | Cross-OS / disruption E2E (`connectivity-e2e.yml`) |
 |---|---|---|---|
-| Ubuntu 24.04 | Not run | Not run | Not run |
-| macOS 15 | Not run | Not run | Not run |
-| Windows 2022 | Not run | Not run | Not run |
+| Ubuntu 24.04 | passed (`ef0abfc`) | passed — backend feasibility (`ebb4a1f`), agent integration not run | not run |
+| macOS 15 | passed (`ef0abfc`) | passed — backend feasibility (`ebb4a1f`), agent integration not run | not run |
+| Windows 2022 | passed (`ef0abfc`) | passed — backend feasibility (`ebb4a1f`), agent integration not run | not run |
 
-- [ ] `peerimeter-agent/.github/workflows/ci.yml` added; matrix runs natively on all three OSes, not just cross-compile.
+- [x] `peerimeter-agent/.github/workflows/ci.yml` added; matrix runs natively on all three OSes, not just cross-compile.
 - [ ] `peerimeter-agent/.github/workflows/wireguard-integration.yml` added with real interface/handshake/bidirectional traffic assertions and cleanup.
 - [ ] `peerimeter-agent/.github/workflows/connectivity-e2e.yml` added with Linux namespaces and provision for mixed-OS tests.
-- [ ] macOS/Windows GitHub-hosted tunnel feasibility checked and, if blocked, self-hosted runner requirement recorded.
-- [ ] All integration skips and missing infrastructure are reported explicitly, never as a pass.
+- [x] macOS/Windows GitHub-hosted tunnel feasibility checked: both passed on the exact target images; no self-hosted fallback currently needed.
+- [x] All integration skips and missing infrastructure are reported explicitly, never as a pass; agent E2E remains unavailable and manual E2E workflow fails with a blocked explanation.
 - [ ] `peerimeter-service` independent CI added at Phase 2.
 
 ## Additional requirements checklist
 
-- [ ] P0 static JSON schema versioning, validation and protected local key references.
+- [x] P0 static JSON schema versioning, validation and protected local key references.
 - [ ] `peerimeter-agent run --config <path>` makes no API/MQTT/STUN calls.
 - [ ] Real WireGuard connectivity from static configs on Linux, macOS and Windows, each natively verified.
 - [ ] systemd, launchd and Windows Service lifecycle with local offline `status` and `peers`.
@@ -68,20 +68,34 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
-| `peerimeter-agent` | None | Phase 0 / Phase 1 | Not run |
+| `peerimeter-agent` | `ef0abfcf23c385355f383eeda69509eb33dc2962` (native baseline); `ebb4a1f` (backend feasibility) | Phase 0 baseline verified; run/status/peers await Phase 1 | Native CI and backend feasibility each passed on all three OSes |
 | `peerimeter-service` | None | Not started; wait for agent milestone | Not run |
 
 ## Completed work
 
-_None verified yet._
+- Created [peerimeter-agent](https://github.com/peerimeter/peerimeter-agent) as an independent repository. No service code/repository created ahead of Phase 2.
+- Implemented versioned strict static JSON parsing/validation, two public templates, secure fresh example generation, private key handling, Linux naming/ownership helpers, platform interfaces and foreground cleanup lifecycle tests.
+- Added all three workflow files. `run`, `status` and `peers` explicitly report unavailable until the native agent/IPC implementation in Phase 1; no fake running tunnel is exposed.
+- Go **1.27.4** is required in the plan, modules and native CI. Agent self-update is a Phase 7 task.
+- Backend feasibility uses real official WireGuard implementations, independent of the unfinished agent.
+
 
 ## Tests executed
 
-_None executed yet._
+- [Initial native CI, `ebb4a1f`](https://github.com/peerimeter/peerimeter-agent/actions/runs/42942950063): Go 1.27.4 build/vet/race/unit/CLI passed on Ubuntu/macOS; Windows failed at the version/format shell gate before tests. Follow-up `ef0abfc` enforces LF checkout, normalizes CR in version output, adds format diagnostics and macOS extended-ACL tests.
+- [Native backend feasibility, `ebb4a1f`](https://github.com/peerimeter/peerimeter-agent/actions/runs/42942949983): all three passed actual interface/route creation, authenticated handshake, bidirectional traffic, restart and teardown. Evidence artifacts include SHA, image/version, architecture, timestamp and run URL.
+- Runners: Ubuntu 24.04 x64 image `20261101.360.1` (kernel WG); macOS 15 ARM64 image `20261104.0514.1` (native utun/wireguard-go); Windows 2022 x64 image `20261101.353.1` (WireGuardNT, official signed MSI test prerequisite).
+- [Follow-up native CI, `ef0abfcf23c385355f383eeda69509eb33dc2962`](https://github.com/peerimeter/peerimeter-agent/actions/runs/42943244505): **passed on all three OSes**, including exact Go 1.27.4, formatting, vet, race/unit tests, build and protected example generation/validation. Windows first-run gate failure resolved; native macOS extended-ACL and Windows DACL security tests passed.
+- Local Go 1.27.4 toolchain segfaults in this Termux/Nix ARM64 environment, including `go version`; local Go 1.26.4 with an external temporary manifest passed unit/vet/build/CLI checks as diagnostics only. Workflow actionlint and Bash syntax passed. No local result is represented as Go 1.27.4 verification.
+
 
 ## Known blockers / limitations
 
-_None recorded yet._
+- Phase 1 agent backends, real `run`/local `status`/`peers`, service managers, persisted local interface selection and actual OS collision detection are not implemented.
+- The backend test MSI is not the required offline Windows-agent installer; bundling the signed WireGuardNT component remains Phase 1 work.
+- Connectivity E2E, NAT/IP-change recovery and mixed-OS agent links are not run; separate hosted runner jobs do not share a LAN.
+- The privileged workflow currently verifies backend feasibility; the stronger agent integration and E2E checklist items remain open.
+
 
 ## Architectural decisions
 
@@ -93,8 +107,19 @@ _None recorded yet._
 
 ## Next steps
 
-1. Examine both repository directories and reconcile this starter file with existing code.
-2. Implement Phase 0 in small, tested increments, immediately creating the native Linux/macOS/Windows GitHub Actions CI matrix and recording actual results.
+1. Implement the Phase 1 native agent/IPC adapters and make run/status/peers operational on all three OSes.
+2. Keep the now-passing native Linux/macOS/Windows Go 1.27.4 CI matrix green and record actual results per tested code SHA.
 3. Implement the versioned static JSON config and Linux interface-name resolution in Phase 0/1.
 4. Implement and **natively verify** WireGuard adapters on Linux, macOS and Windows before server/dashboard work.
 5. Add Base64URL join bundle parsing and enrollment only in Phase 2.
+
+## Session log — 2026-11-11
+
+- Agent repository created with first commit `ebb4a1f`; all three real backend
+  probes passed. Follow-up `ef0abfc` adds macOS extended ACL protection and fixes
+  cross-platform line endings; all three native baseline jobs passed.
+- Both repositories' progress logs distinguish tested code SHA from later
+  documentation-only commits. Phase 0 is not declared fully complete while
+  operational run/status/peers depend on unimplemented Phase 1 native/IPC adapters.
+- Go pin and future self-update requirements were committed/pushed separately in
+  planning commits `3c9a31d` and `025d12c`.
