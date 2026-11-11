@@ -58,20 +58,15 @@
         <p class="small">Installers verify release checksums. Choose a version and install path with the documented script options.</p>
         <div class="platform">
           <h3>Linux</h3>
-          <pre>curl -fsSLo install.sh https://agent.peerimeter.app/install.sh
-chmod +x install.sh
-sudo ./install.sh</pre>
+          <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh</pre>
         </div>
         <div class="platform">
           <h3>macOS</h3>
-          <pre>curl -fsSLo install.sh https://agent.peerimeter.app/install.sh
-chmod +x install.sh
-sudo ./install.sh</pre>
+          <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh</pre>
         </div>
         <div class="platform">
           <h3>Windows PowerShell (Run as Administrator)</h3>
-          <pre>Invoke-WebRequest https://agent.peerimeter.app/install.ps1 -OutFile install.ps1
-.\install.ps1</pre>
+          <pre>irm https://agent.peerimeter.app/install.ps1 | iex</pre>
         </div>
         <p class="small">Custom version and destination: <code>./install.sh --version vX.Y.Z --install-dir /absolute/path</code> or <code>./install.ps1 -Version vX.Y.Z -InstallDir 'C:\Tools\Peerimeter'</code>.</p>
       </section>
