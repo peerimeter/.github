@@ -4,7 +4,7 @@
 
 # Peerimeter
 
-Peerimeter is a planned, self-hosted WireGuard mesh VPN with direct peer-to-peer connections and centralized network management.
+Peerimeter is a self-hosted WireGuard mesh agent for direct peer-to-peer connections. The offline cross-platform agent is implemented; the control plane is planned for a later milestone.
 
 The project is organized around two independent repositories:
 
@@ -13,6 +13,8 @@ The project is organized around two independent repositories:
 
 Later milestones cover STUN-assisted endpoint discovery, connection recovery, and gateways for standard WireGuard clients. Connections are direct only: there is no relay fallback, so restrictive NAT or firewalls may prevent connectivity.
 
-**Status:** Planning / pre-implementation. No implementation milestone or platform support has been verified yet.
+**Status:** Phase 1 offline agent complete and natively verified on Linux, macOS and Windows. The standalone STUN probe is an in-progress Phase 1 add-on; the service/control plane has not started.
+
+**Website:** [peerimeter.app](https://peerimeter.app) · [Agent installer](https://agent.peerimeter.app) (release packages will be available after the first public release).
 
 See [the implementation plan](https://github.com/peerimeter/.github/blob/main/docs/planning/plan.md), [additional requirements](https://github.com/peerimeter/.github/blob/main/docs/planning/additional-plan.md), and [progress tracker](https://github.com/peerimeter/.github/blob/main/docs/planning/progress.md).
