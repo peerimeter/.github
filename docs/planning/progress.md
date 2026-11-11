@@ -123,3 +123,4 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
   operational run/status/peers depend on unimplemented Phase 1 native/IPC adapters.
 - Go pin and future self-update requirements were committed/pushed separately in
   planning commits `3c9a31d` and `025d12c`.
+- Added Phase 1 requirements for Linux/macOS `install.sh` and Windows `install.ps1`: latest stable by default, explicit version and installation directory, matching verified release artifacts and native installer tests. Added README presentation/navigation and platform-specific installation examples as a Phase 1 task; neither installer implementation nor README reformatting is claimed complete.
