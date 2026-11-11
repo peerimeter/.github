@@ -92,7 +92,7 @@
 
 | Component | Default | Notes |
 |---|---|---|
-| Language | Go 1.27.3 | Exact required toolchain for development, native CI and release builds; one independent Go module per repository |
+| Language | Go 1.27.4 | Exact required toolchain for development, native CI and release builds; one independent Go module per repository |
 | HTTP | `net/http` + `chi` | Keep REST handlers thin |
 | Database | PostgreSQL | SQL migrations, `pgx` or `database/sql`; avoid excessive ORM magic |
 | MQTT | Mosquitto | MQTT v5 or v3.1.1, QoS 1 for notifications; TLS + per-device authorization |
@@ -107,7 +107,7 @@
 
 **Platform strategy:** Linux, macOS, and Windows in the first implementation milestone using static local JSON and no central server. macOS and Windows must use tested, officially supported WireGuard integration approaches; do not assume `wgctrl-go` can create adapters or manage routes on every OS. Encapsulate interface creation, lifecycle, addresses, routes, forwarding, and firewall in OS adapters.
 
-**Go toolchain (mandatory from Phase 0):** Use **Go 1.27.3** consistently in both repositories, local development, all three native CI jobs, integration-test helpers and release builds. Pin the version explicitly in module/toolchain configuration and CI; do not use floating `stable` or silently upgrade to a different patch release. Future version changes require an explicit update to this plan and the corresponding build configuration.
+**Go toolchain (mandatory from Phase 0):** Use **Go 1.27.4** consistently in both repositories, local development, all three native CI jobs, integration-test helpers and release builds. Pin the version explicitly in module/toolchain configuration and CI; do not use floating `stable` or silently upgrade to a different patch release. Future version changes require an explicit update to this plan and the corresponding build configuration.
 
 **Windows driver installation (mandatory from Phase 1):** The `peerimeter-agent` installer must bundle the official, correctly signed WireGuardNT component for the target architecture and, with administrator privileges, arrange installation of the required driver before creating the first tunnel. Users must not need to download or manually install the separate WireGuard application or GUI. Use the officially supported WireGuardNT/embeddable integration, pin the bundled version, and verify its signature/integrity. Driver provisioning must work offline from the agent installation package so static mode has no installation-time download dependency. Verify the complete installation and native tunnel operation on a clean Windows runner without a preinstalled WireGuard package.
 
