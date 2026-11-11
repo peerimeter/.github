@@ -266,3 +266,10 @@ network/resilience/release work and are not claims of verified connectivity.
 
 Added a requirement for a standalone Cobra STUN command with selected or OS-assigned UDP port, observable mapped endpoint, cleanup and native tests on all three platforms. Implementation remains pending; this does not change the Phase 1 completion record for the preceding accepted scope.
 
+
+## 🔄 Phase 1 STUN add-on implementation
+
+The agent now has a standalone `stun [local-udp-port]` command: explicit port or
+OS-selected port 0, configurable STUN server, mapped endpoint JSON, response
+validation, and socket cleanup. Diagnostic local and cross-platform builds pass;
+review, native per-OS verification and live STUN behavior remain pending.
