@@ -96,6 +96,7 @@
 |---|---|---|
 | Language | Go 1.27.4 | Exact required toolchain for development, native CI and release builds; one independent Go module per repository |
 | HTTP | `net/http` + `chi` | Keep REST handlers thin |
+| Agent CLI | `spf13/cobra` | Pin the verified stable version; use Cobra/pflag for subcommands, arguments, help and shell completion |
 | Database | PostgreSQL | SQL migrations, `pgx` or `database/sql`; avoid excessive ORM magic |
 | MQTT | Mosquitto | MQTT v5 or v3.1.1, QoS 1 for notifications; TLS + per-device authorization |
 | WireGuard control | `wgctrl-go` | Linux kernel backend; OS-specific adapters for macOS/Windows |
@@ -511,6 +512,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 **Done when:** static configuration and protected key references validate offline; native build, unit/CLI tests and validation pass on all three target OS runners; platform/lifecycle interfaces are testable; and native WireGuard backend feasibility is attempted and truthfully recorded per OS. Operational tunnel/service commands are a Phase 1 acceptance requirement, so Phase 0 has no dependency on their implementation. A cross-compiled build alone is **not** native verification.
 
 ### Phase 1 — Fully offline direct WireGuard on Linux, macOS, Windows (P0)
+- [ ] Use Cobra for agent subcommands, flags/arguments, contextual help and shell completion. Pin its verified stable version (initially `github.com/spf13/cobra v1.10.2`), preserve structured/redacted errors and do not add a second argument parser. A future library replacement requires an explicit documented choice rather than chasing newer libraries.
 - [ ] Make `run --config` operational through the real native adapters on all three OSes, continuously managing the validated static configuration. Implement functional local `status` and `peers` through authenticated local IPC or actual local WireGuard state, reporting the network, actual interface and observed tunnel/peer state without server access; verify these commands against real running and stopped agents.
 - [ ] Create/configure/tear down a local WG interface through each OS-supported backend.
 - [ ] Apply static addresses, peer public keys, endpoints, AllowedIPs, listen port, routes and keepalive from JSON.

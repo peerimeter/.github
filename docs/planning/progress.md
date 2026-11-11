@@ -150,3 +150,10 @@ and every subsequent phase. A different model is optional; record the actual
 reviewer/model, reviewed SHA, findings, fixes and final outcome. Blocking findings
 must be resolved and affected tests rerun. Phase 1 review is pending; the phase
 is not complete. Native runtime implementation and its CI are in progress.
+
+## CLI argument library — requested 2026-11-11
+
+Use Cobra/pflag for the agent CLI. Pinned stable `spf13/cobra v1.10.2`, verified
+against its official release. Phase 1 migrates command/argument handling to Cobra,
+adds contextual help and shell completion, and preserves redacted JSON errors.
+Native verification of the migration is pending.
