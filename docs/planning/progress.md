@@ -189,3 +189,26 @@ all earlier core test passes remain valid evidence, not full-phase completion.
 command-per-file Cobra organization, branded/color-aware version output with
 `--json`, and wgshow-style peer rendering from the explicitly pinned MIT example
 in additional-plan.md A10. All remain within the ongoing Phase 1 review gate.
+
+## 🔄 Expanded Phase 1 closing review — 2026-11-11
+
+Fixes were committed and pushed in agent `8f247070fb6c4ff571c0de58b8c85196f4d1d9da`.
+[Native CI](https://github.com/peerimeter/peerimeter-agent/actions/runs/42998147614)
+passed on Linux, macOS and Windows with exact Go 1.27.4 (format, vet, race/unit,
+build and CLI smoke). This includes directory ownership, branded CLI and peer
+presentation tests; full-phase completion still requires integration and review.
+
+Independent reviewer `/root/phase1_review` reviewed that exact commit; inherited
+parent model, concrete model identifier unavailable. Configuration ownership,
+provisional migration tracking, runtime identity and Windows deletion locking
+passed code review. One blocking finding remains: uninstall must detect a native
+service pointing to its executable even when a pre-inventory upgrade has no
+recorded service profile. The fix and regression are in progress.
+
+[Integration](https://github.com/peerimeter/peerimeter-agent/actions/runs/42998147627)
+and [packages/installers](https://github.com/peerimeter/peerimeter-agent/actions/runs/42998147753)
+failed. Follow-up fixes address legacy migration planning before ownership claim,
+Windows helper hashing without an unavailable PowerShell cmdlet, default macOS
+resource-ancestor fixture permissions and an outdated Unix symlink test. Native
+verification and a review of the final corrected commit are pending. Phase 1
+remains 🔄 in progress; Phase 2 remains ⬜ not started.
