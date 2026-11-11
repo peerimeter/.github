@@ -288,5 +288,5 @@ example main/flag/log.Fatal structure or introduce a second CLI parser.
 - Preserve applicable copyright/license attribution when adapting code. Add
   focused renderer tests, plain/color/JSON CLI tests and native integration
   assertions against real backend state. Existing automation must opt into
-  `peers --json` when parsing peer data. This task is pending until implemented
-  and reviewed; adding the requirement is not evidence of completion.
+  `peers --json` when parsing peer data. Completion requires implementation,
+  native verification and independent review; see progress.md for evidence.

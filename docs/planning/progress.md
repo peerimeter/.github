@@ -4,7 +4,7 @@
 
 ## Current status
 
-- **Active phase:** 🔄 Phase 1 — directory layout, migration and complete uninstall; Phase 2 has not started
+- **Active phase:** ✅ Phase 1 complete; ⬜ Phase 2 not started
 - **Last verified milestone:** Native offline agent, service/IPC, installers, packages and independent review verified for Phase 1 (2026-11-11); exact commits/runs below.
 - **Repositories:** `peerimeter-agent` (P0/P1, first); `peerimeter-service` (Phase 2 onward). Two independent Git repositories.
 - **Next action:** Choose the first published agent release or begin Phase 2 when requested. No service/control-plane work has started.
@@ -17,7 +17,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | Phase | Status | Verification / notes |
 |---|---|---|
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/peers explicitly belong to Phase 1 |
-| 1 — Offline WireGuard on Linux/macOS/Windows | 🔄 In progress | Original native runtime/service/installer scope verified; new directory separation/migration and full uninstall requirements pending |
+| 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Server + join bundles + sync | ⬜ Not started | |
 | 3 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
 | 4 — Browser dashboard + GitHub SSO | ⬜ Not started | |
@@ -212,3 +212,52 @@ Windows helper hashing without an unavailable PowerShell cmdlet, default macOS
 resource-ancestor fixture permissions and an outdated Unix symlink test. Native
 verification and a review of the final corrected commit are pending. Phase 1
 remains 🔄 in progress; Phase 2 remains ⬜ not started.
+
+## ✅ Phase 1 accepted — 2026-11-11
+
+Final tested and independently reviewed implementation:
+`091bd40d115c7371e1c0f4cd0f18fb8f3ab71ca2`. Subsequent completion records and
+README status updates change documentation only.
+
+| Gate | Linux amd64 | macOS arm64 | Windows amd64 |
+| --- | --- | --- | --- |
+| [Native Go 1.27.4 CI](https://github.com/peerimeter/peerimeter-agent/actions/runs/43002033268) — format, vet, race/unit, build and CLI | passed | passed | passed |
+| [Actual WireGuard agent integration](https://github.com/peerimeter/peerimeter-agent/actions/runs/43002033188) | passed | passed | passed |
+| [Native packages and installers](https://github.com/peerimeter/peerimeter-agent/actions/runs/43002033328) | passed | passed | passed |
+
+All six Linux/macOS/Windows amd64/arm64 packages built successfully. Native
+receipts report the exact final SHA and images Ubuntu 24.04 x64
+`20261101.360.1`, macOS 15 arm64 `20261104.0514.1`, Windows 2022 x64
+`20261101.353.1`.
+
+Expanded acceptance includes default/custom/spaced config/state/runtime paths,
+Unix reboot-style runtime recreation and live migration from actual `4246c6b`
+legacy services, ownership-bound configuration/runtime claims, protected
+operator access, read-only removal previews, live full removal, changed-file
+refusal, retries/idempotency and unrelated/source credential preservation.
+Windows additionally verifies signed bundled WireGuardNT, standard ProgramData
+ACLs, custom ProgramData program paths and bounded executable self-removal.
+All four agent READMEs have consistent navigation, headings, tables, code blocks
+and verified local links; stale backend probe descriptions were corrected.
+Cobra file organization, centralized prefix, branded version/color/JSON and
+refactored public wgshow peer presentation with MIT attribution are complete.
+
+Independent reviewer `/root/phase1_review` **passed code review and final phase
+acceptance** at the exact SHA above after inspecting native receipts and Windows
+logs. The reviewer inherited the parent model; a concrete model identifier is
+unavailable. All blocking findings are resolved: cross-installation config/runtime
+ownership, removal/startup exclusion and Windows lock deletion, unhealthy-state
+shutdown, provisional migration tracking, untracked native service detection and
+ambiguous registration refusal. Native follow-up also fixed asynchronous legacy
+shutdown, explicit private test fixtures, PowerShell helper hashing and narrow
+standard shared-root ACL handling. No blocking or deferred code findings remain.
+
+Limits remain explicit: Linux tests two actual agents in isolated namespaces;
+macOS/Windows test the native agent against an independent userspace WireGuard
+peer. Mixed-OS VM links and NAT/network-disruption recovery are **not run**;
+other packaged architectures are cross-build only. No public release was
+published, so live latest-release downloads remain unverified (URL resolution is
+fixture-tested with actual native packages). These limits belong to the later
+network/resilience/release work and are not claims of verified connectivity.
+
+✅ Phase 0 complete · ✅ Phase 1 complete · ⬜ Phase 2 not started.
