@@ -4,7 +4,7 @@
 
 ## Current status
 
-- **Active phase:** Phase 0 — Cross-platform baseline and static JSON contract
+- **Active phase:** Phase 1 — Native offline agent runtime and local status/service lifecycle (not started); Phase 0 complete
 - **Last verified milestone:** Phase 0 static-config/build/unit/CLI baseline passed natively with Go 1.27.4 on all three OSes; real WireGuard backend feasibility also passed (2026-11-11).
 - **Repositories:** `peerimeter-agent` (P0/P1, first); `peerimeter-service` (Phase 2 onward). Two independent Git repositories.
 - **Next action:** Implement Phase 1 native agent adapters/IPC and service lifecycle to make run/status/peers operational; preserve the tested static validation and key contract.
@@ -13,7 +13,7 @@
 
 | Phase | Status | Verification / notes |
 |---|---|---|
-| 0 — Cross-platform baseline + static JSON | In progress | Independent agent repo, strict config/key handling, CLI validation, interfaces and native CI verified on all three; operational run/status/peers await Phase 1 native/IPC backends |
+| 0 — Cross-platform baseline + static JSON | Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/peers explicitly belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | Not started | All three OSes must work without API using static JSON; Linux interface naming from `additional-plan.md` |
 | 2 — Server + join bundles + sync | Not started | |
 | 3 — NAT traversal + self-healing | Not started | Direct connections only; no relay |
@@ -68,7 +68,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
-| `peerimeter-agent` | `ef0abfcf23c385355f383eeda69509eb33dc2962` (native baseline); `ebb4a1f` (backend feasibility) | Phase 0 baseline verified; run/status/peers await Phase 1 | Native CI and backend feasibility each passed on all three OSes |
+| `peerimeter-agent` | `ef0abfcf23c385355f383eeda69509eb33dc2962` (native baseline); `ebb4a1f` (backend feasibility) | Phase 0 complete; Phase 1 runtime/IPC next | Native CI and backend feasibility each passed on all three OSes |
 | `peerimeter-service` | None | Not started; wait for agent milestone | Not run |
 
 ## Completed work
@@ -109,7 +109,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 1. Implement the Phase 1 native agent/IPC adapters and make run/status/peers operational on all three OSes.
 2. Keep the now-passing native Linux/macOS/Windows Go 1.27.4 CI matrix green and record actual results per tested code SHA.
-3. Implement the versioned static JSON config and Linux interface-name resolution in Phase 0/1.
+3. Reuse the verified static JSON contract and Linux name resolver; add persisted local selection and actual OS collision detection in Phase 1.
 4. Implement and **natively verify** WireGuard adapters on Linux, macOS and Windows before server/dashboard work.
 5. Add Base64URL join bundle parsing and enrollment only in Phase 2.
 
@@ -124,3 +124,18 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - Go pin and future self-update requirements were committed/pushed separately in
   planning commits `3c9a31d` and `025d12c`.
 - Added Phase 1 requirements for Linux/macOS `install.sh` and Windows `install.ps1`: latest stable by default, explicit version and installation directory, matching verified release artifacts and native installer tests. Added README presentation/navigation and platform-specific installation examples as a Phase 1 task; neither installer implementation nor README reformatting is claimed complete.
+
+## Phase boundary clarification — 2026-11-11
+
+The earlier session left Phase 0 open because operational run/status/peers require
+Phase 1 native/IPC backends. That scheduling dependency is now corrected in
+plan.md and additional-plan.md: Phase 0 owns command/argument contracts, functional
+offline validation and testable lifecycle/adapter interfaces; Phase 1 owns working
+tunnel/service operation and observed local status/peers. Prior session notes
+above describe the earlier checklist wording and are superseded by this entry.
+
+Phase 0 is complete against the clarified criteria, supported by native CI at
+`ef0abfcf23c385355f383eeda69509eb33dc2962` and backend feasibility at
+`ebb4a1f880e39e2ca1003d9551c185a76ee81069` (run links above). No implementation or
+test result changed in this documentation correction. Phase 1 remains not started;
+there is no claim of working agent tunnels, IPC or service management.

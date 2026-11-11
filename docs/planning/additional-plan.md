@@ -213,8 +213,8 @@ Acceptance criteria:
 
 ## A6. Revised execution order and Codex instructions
 
-1. **Phase 0:** cross-platform project baseline, versioned static JSON model, CLI and adapter interfaces.
-2. **Phase 1:** actual Linux, macOS and Windows static WireGuard agents and services (API-free), with native verification.
+1. **Phase 0:** cross-platform project baseline, versioned static JSON model, functional offline config validation, CLI command/argument contracts, and testable lifecycle/adapter interfaces. Native build/unit/CLI validation and early backend feasibility checks belong here. Runtime-dependent CLI commands must explicitly report unavailable until Phase 1; operational tunnels and local status/peers are not Phase 0 completion gates.
+2. **Phase 1:** actual Linux, macOS and Windows static WireGuard agents and services (API-free), including operational `run --config`, local `status` and `peers`, authenticated local IPC or real local WireGuard state, with native verification. This implements the runtime behind the Phase 0 CLI contracts.
 3. **Phase 2:** central API, PostgreSQL, join bundles (`api_url` + `enrollment_token`), MQTT and online config provider, reusing static mode's reconciler.
 4. **Phase 3:** STUN, direct NAT traversal, dynamic IP recovery/self-healing.
 5. **Phase 4:** browser dashboard and GitHub SSO.

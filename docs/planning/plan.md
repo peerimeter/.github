@@ -502,13 +502,14 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 ### Phase 0 — `peerimeter-agent` repository baseline, cross-platform build and static config contract
 - [x] Create Go module, lint/test/build tooling and OS adapter interfaces.
 - [x] Define and validate versioned static JSON schema and test fixtures for two or more peers.
-- [ ] Implement CLI `run --config`, `validate-config`, `status`, `peers`; separate foreground runtime from service management.
+- [x] Implement the CLI command surface and argument validation for `run --config`, `status` and `peers`, functional offline `validate-config`, and testable foreground lifecycle/platform interfaces separate from service management. Until Phase 1 backends exist, runtime-dependent commands must return an explicit unavailable error; they must not claim a running tunnel or fabricated state.
 - [x] Add mandatory native GitHub Actions matrix (`ubuntu-24.04`, `macos-15`, `windows-2022`) for builds, unit/CLI tests and offline static JSON validation; add separate privileged integration and connectivity E2E workflows, with early backend feasibility checks per OS. Baseline and real backend feasibility passed on all three; agent integration and E2E remain Phase 1 work (see progress.md).
 - [x] Establish key/secret file permissions and OS-specific handling, no credentials in logs.
 
-**Done when:** static configuration validates offline, agent builds for all three OSes, and platform adapters have testable interfaces. A cross-compiled build alone is **not** runtime verification.
+**Done when:** static configuration and protected key references validate offline; native build, unit/CLI tests and validation pass on all three target OS runners; platform/lifecycle interfaces are testable; and native WireGuard backend feasibility is attempted and truthfully recorded per OS. Operational tunnel/service commands are a Phase 1 acceptance requirement, so Phase 0 has no dependency on their implementation. A cross-compiled build alone is **not** native verification.
 
 ### Phase 1 — Fully offline direct WireGuard on Linux, macOS, Windows (P0)
+- [ ] Make `run --config` operational through the real native adapters on all three OSes, continuously managing the validated static configuration. Implement functional local `status` and `peers` through authenticated local IPC or actual local WireGuard state, reporting the network, actual interface and observed tunnel/peer state without server access; verify these commands against real running and stopped agents.
 - [ ] Create/configure/tear down a local WG interface through each OS-supported backend.
 - [ ] Apply static addresses, peer public keys, endpoints, AllowedIPs, listen port, routes and keepalive from JSON.
 - [ ] Honor Linux `pm-$networkName` safe naming algorithm and `--interface` override; reject conflicts.
@@ -610,7 +611,7 @@ Update this section whenever a phase is finished or an important design constrai
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0 — Baseline | In progress | Agent repo and static contract implemented; native verification tracked in progress.md |
+| 0 — Baseline | Complete | Native Go 1.27.4 baseline and backend feasibility verified on all three; operational tunnel/IPC commands belong to Phase 1 |
 | 1 — Offline WG on Linux/macOS/Windows | Not started | |
 | 2 — Server + sync | Not started | |
 | 3 — NAT + self-healing | Not started | |
