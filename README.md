@@ -15,4 +15,4 @@ Later milestones cover STUN-assisted endpoint discovery, connection recovery, an
 
 **Status:** Planning / pre-implementation. No implementation milestone or platform support has been verified yet.
 
-See [the implementation plan](docs/planning/plan.md), [additional requirements](docs/planning/additional-plan.md), and [progress tracker](docs/planning/progress.md).
+See [the implementation plan](https://github.com/peerimeter/.github/blob/main/docs/planning/plan.md), [additional requirements](https://github.com/peerimeter/.github/blob/main/docs/planning/additional-plan.md), and [progress tracker](https://github.com/peerimeter/.github/blob/main/docs/planning/progress.md).
