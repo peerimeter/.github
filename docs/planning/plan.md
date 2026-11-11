@@ -107,6 +107,8 @@
 
 **Platform strategy:** Linux, macOS, and Windows in the first implementation milestone using static local JSON and no central server. macOS and Windows must use tested, officially supported WireGuard integration approaches; do not assume `wgctrl-go` can create adapters or manage routes on every OS. Encapsulate interface creation, lifecycle, addresses, routes, forwarding, and firewall in OS adapters.
 
+**Windows driver installation (mandatory from Phase 1):** The `peerimeter-agent` installer must bundle the official, correctly signed WireGuardNT component for the target architecture and, with administrator privileges, arrange installation of the required driver before creating the first tunnel. Users must not need to download or manually install the separate WireGuard application or GUI. Use the officially supported WireGuardNT/embeddable integration, pin the bundled version, and verify its signature/integrity. Driver provisioning must work offline from the agent installation package so static mode has no installation-time download dependency. Verify the complete installation and native tunnel operation on a clean Windows runner without a preinstalled WireGuard package.
+
 ## 4. TWO INDEPENDENT GIT REPOSITORIES (mandatory)
 
 This project is **not a monorepo**. Create and maintain exactly two separate Git repositories, with independent `go.mod`, CI pipelines, versioning, release artifacts, and issue tracking:
@@ -510,6 +512,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 - [ ] Honor Linux `pm-$networkName` safe naming algorithm and `--interface` override; reject conflicts.
 - [ ] Run continuously headless; support graceful shutdown, safe restart/reconciliation and persistent local identity/selected interface.
 - [ ] Provide service install/start/stop/uninstall for systemd, launchd and Windows Service, with protected config path.
+- [ ] Bundle the official signed WireGuardNT component with the Windows-agent installer and provision its driver with administrator privileges, without a separate WireGuard application or download; verify offline installation and real tunnel connectivity on a clean Windows runner.
 - [ ] Run platform-specific privileged WireGuard integration jobs on **each** OS (hosted if supported; otherwise secured self-hosted); demonstrate actual interface creation, handshake, bidirectional tunnel traffic, restart, teardown and config-error behavior.
 - [ ] Do not attempt control-plane calls in static mode; direct endpoints must already be supplied in JSON.
 
