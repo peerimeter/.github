@@ -69,7 +69,7 @@
           <h3>Windows PowerShell (Run as Administrator)</h3>
           <pre>irm https://agent.peerimeter.app/install.ps1 | iex</pre>
         </div>
-        <p class="small">Custom version and destination: <code>./install.sh --version vX.Y.Z --install-dir /absolute/path</code> or <code>./install.ps1 -Version vX.Y.Z -InstallDir 'C:\Tools\Peerimeter'</code>.</p>
+        <p class="small">For Linux/macOS pipe installs, pass options after <code>sh -s --</code>, for example <code>curl -fsSL https://agent.peerimeter.app/install.sh | sh -s -- --install-dir "$HOME/.local/bin"</code> or <code>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh -s -- --version v0.1.0 --install-dir /usr/local/bin</code>. Windows: <code>./install.ps1 -Version vX.Y.Z -InstallDir 'C:\Tools\Peerimeter'</code>.</p>
       </section>
     </main>
     <footer>Peerimeter is open source. <a href="https://github.com/peerimeter">GitHub organization</a> · <a href="https://github.com/peerimeter/peerimeter-agent/blob/main/README.md">Agent documentation</a></footer>
