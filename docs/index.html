@@ -29,7 +29,15 @@
     h2 { font-size:1.3rem; margin:0 0 8px; }
     .card p,.small { color:var(--muted); }
     code,pre { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
-    pre { overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; border:1px solid #302840; border-radius:9px; background:#09080e; padding:14px; color:#f2ddff; font-size:.86rem; }
+    .code-block { position:relative; }
+    pre { overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; border:1px solid #302840; border-radius:9px; background:#09080e; padding:14px 48px 14px 14px; color:#f2ddff; font-size:.86rem; }
+    .copy-button { position:absolute; top:7px; right:7px; display:grid; place-items:center; width:32px; height:32px; padding:0; border:1px solid #443653; border-radius:7px; background:#171321; color:#d9c8e8; cursor:pointer; }
+    .copy-button:hover { border-color:var(--pink); color:white; }
+    .copy-button:focus-visible { outline:2px solid var(--pink); outline-offset:2px; }
+    .copy-button svg { width:16px; height:16px; }
+    .copy-button[data-state="copied"] { color:var(--green); }
+    .copy-button[data-state="error"] { color:#ff9b9b; }
+    .copy-status { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     .platform { margin-bottom:16px; }
     .platform h3 { font-size:1rem; margin:0 0 6px; }
     footer { border-top:1px solid var(--line); color:var(--muted); padding:22px 0 38px; font-size:.9rem; }
@@ -74,5 +82,43 @@
     </main>
     <footer>Peerimeter is open source. <a href="https://github.com/peerimeter">GitHub organization</a> · <a href="https://github.com/peerimeter/peerimeter-agent/blob/main/README.md">Agent documentation</a></footer>
   </div>
+  <script>
+    const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>';
+    document.querySelectorAll('pre').forEach((code) => {
+      const block = document.createElement('div');
+      block.className = 'code-block';
+      code.before(block);
+      block.append(code);
+      const button = document.createElement('button');
+      button.className = 'copy-button';
+      button.type = 'button';
+      button.setAttribute('aria-label', 'Copy code');
+      button.title = 'Copy code';
+      button.innerHTML = copyIcon;
+      block.append(button);
+      const status = document.createElement('span');
+      status.className = 'copy-status';
+      status.setAttribute('aria-live', 'polite');
+      block.append(status);
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(code.innerText.trim());
+          button.dataset.state = 'copied';
+          button.title = 'Copied';
+          status.textContent = 'Command copied to clipboard';
+          button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+        } catch {
+          button.dataset.state = 'error';
+          button.title = 'Copy failed';
+          status.textContent = 'Could not copy command';
+        }
+        window.setTimeout(() => {
+          delete button.dataset.state;
+          button.title = 'Copy command';
+          button.innerHTML = copyIcon;
+        }, 1800);
+      });
+    });
+  </script>
 </body>
 </html>
