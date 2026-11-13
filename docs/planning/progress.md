@@ -276,3 +276,12 @@ The agent now has a standalone `stun [local-udp-port]` command: explicit port or
 OS-selected port 0, configurable STUN server, mapped endpoint JSON, response
 validation, and socket cleanup. Diagnostic local and cross-platform builds pass;
 review, native per-OS verification and live STUN behavior remain pending.
+
+
+## Planned Phase 2 requirement — one agent, multiple networks (2026-11-13)
+
+Expanded the earlier A1 interface-naming requirement into explicit concurrent
+multi-network management by one agent service. Phase 2 now includes independent
+network state/lifecycle, CLI selection/overview, conflict validation and two-network
+native acceptance tests; details are in additional-plan.md A12. This is planned
+work and does not claim that multi-network service management is implemented.
