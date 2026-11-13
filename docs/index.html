@@ -37,14 +37,6 @@
     .release-version svg { width:17px; height:17px; flex:none; color:#ed9ff5; }
     .release-item[data-unavailable="true"] { cursor:default; }
     .release-item[data-unavailable="true"] .release-version { color:#b9b1c7; font-size:1rem; font-weight:600; letter-spacing:0; }
-    .install-help { margin-top:22px; padding:18px; border:1px solid var(--line); border-radius:10px; background:#0e0c15; }
-    .install-help h3 { margin:0 0 12px; font-size:1.05rem; }
-    .install-help-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-    .install-option { min-width:0; padding:13px; border:1px solid #292238; border-radius:9px; background:#12101a; }
-    .install-option.wide { grid-column:1/-1; }
-    .install-option strong { display:block; margin-bottom:6px; font-size:.9rem; }
-    .install-option pre { margin:0; }
-    .install-option p { margin:9px 0 0; color:var(--muted); font-size:.9rem; }
     .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:0 0 46px; }
     .card { border:1px solid var(--line); border-radius:14px; background:linear-gradient(145deg,#151220,#100e18); padding:22px; }
     h2 { font-size:1.3rem; margin:0 0 8px; }
@@ -62,7 +54,7 @@
     .platform { margin-bottom:16px; }
     .platform h3 { font-size:1rem; margin:0 0 6px; }
     footer { border-top:1px solid var(--line); color:var(--muted); padding:22px 0 38px; font-size:.9rem; }
-    @media(max-width:760px) { .grid,.install-help-grid{grid-template-columns:1fr} .release-panel{grid-template-columns:repeat(2,minmax(0,1fr))}.release-intro{grid-column:1/-1;padding:2px 2px 4px}.install-option.wide{grid-column:auto} header{padding-top:28px}.hero{padding-top:16px} }
+    @media(max-width:760px) { .grid{grid-template-columns:1fr} .release-panel{grid-template-columns:repeat(2,minmax(0,1fr))}.release-intro{grid-column:1/-1;padding:2px 2px 4px} header{padding-top:28px}.hero{padding-top:16px} }
     @media(max-width:460px) { .release-panel{grid-template-columns:1fr;padding:14px}.release-intro{grid-column:auto}.release-item{min-height:92px} }
   </style>
 </head>
@@ -74,7 +66,7 @@
         <h1>A direct mesh.<br><span>Your keys stay yours.</span></h1>
         <p class="lead">A headless WireGuard agent for Linux, macOS and Windows. Configure peers locally and connect directly, without a required control plane or relay.</p>
         <div class="actions">
-          <a class="button primary" href="#install">Install the agent</a>
+          <a class="button primary" href="https://agent.peerimeter.app/">Install the agent</a>
           <a class="button" href="https://github.com/peerimeter/peerimeter-agent">View source</a>
         </div>
       </section>
@@ -90,7 +82,7 @@
       </section>
       <section id="install" class="card">
         <h2>Install Peerimeter Agent</h2>
-        <p class="small">Installers verify release checksums. Choose a version and install path with the documented script options.</p>
+        <p class="small">Install with the recommended defaults. The installers verify release checksums.</p>
         <div class="platform">
           <h3>Linux</h3>
           <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh</pre>
@@ -103,24 +95,6 @@
           <h3>Windows PowerShell (Run as Administrator)</h3>
           <pre>irm https://agent.peerimeter.app/install.ps1 | iex</pre>
         </div>
-        <aside class="install-help">
-          <h3>Choose a version or install directory</h3>
-          <div class="install-help-grid">
-            <div class="install-option">
-              <strong>Linux / macOS · user install</strong>
-              <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sh -s -- --install-dir "$HOME/.local/bin"</pre>
-            </div>
-            <div class="install-option">
-              <strong>Linux / macOS · system-wide, pinned version</strong>
-              <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh -s -- --version v0.1.0 --install-dir /usr/local/bin</pre>
-            </div>
-            <div class="install-option wide">
-              <strong>Windows PowerShell · one-liner with options (Run as Administrator)</strong>
-              <pre>&amp; ([scriptblock]::Create((irm 'https://agent.peerimeter.app/install.ps1'))) -Version v0.1.0 -InstallDir 'C:\Tools\Peerimeter'</pre>
-              <p>For a downloaded script, use <code>.\install.ps1 -Version v0.1.0 -InstallDir 'C:\Tools\Peerimeter'</code>. Piping the script to <code>iex</code> runs it with defaults; <code>iex</code> does not forward installer parameters.</p>
-            </div>
-          </div>
-        </aside>
       </section>
     </main>
     <footer>Peerimeter is open source. <a href="https://github.com/peerimeter">GitHub organization</a> · <a href="https://github.com/peerimeter/peerimeter-agent/blob/main/README.md">Agent documentation</a></footer>
