@@ -276,8 +276,11 @@ reviewed file revision is `47ad6fc7d7a95296fe893b49c1d4584b4eb6ac40` (MIT-licens
 Refactor the relevant formatting into testable agent code; do not embed the
 example main/flag/log.Fatal structure or introduce a second CLI parser.
 
-- `peers` should provide wgshow-style human-readable output, with `--json` for
-  stable machine-readable data. Keep the Cobra command in its own source file
+- Updated CLI requirement (2026-11-13): `wg show` provides the traditional
+  wgshow-style human-readable output, and bare `wg` defaults to `wg show`.
+  `peers` provides a modern Lip Gloss overview. Preserve `peers --json`; `wg`
+  and `wg show` also accept `--json` for the same stable public peer data.
+  Keep the Cobra command in its own source file
   and separate state acquisition, formatting, color policy and I/O.
 - Read actual authorized local agent/backend snapshots on Linux, macOS and
   Windows. Do not bypass daemon ownership by opening a competing WireGuard
@@ -294,3 +297,28 @@ example main/flag/log.Fatal structure or introduce a second CLI parser.
   assertions against real backend state. Existing automation must opt into
   `peers --json` when parsing peer data. Completion requires implementation,
   native verification and independent review; see progress.md for evidence.
+
+
+## A12. Phase 2 — Multiple networks in one agent service
+
+A1 already requires joining multiple networks without interface-name collisions.
+Expand that into a complete managed-mode requirement: **one installed agent service
+must manage multiple networks concurrently**, on Linux, macOS and Windows. This
+is planned work; today's static CLI remains scoped to a selected runtime/profile.
+
+- Persist separate protected network identities, WireGuard keys, enrollment/device
+  credentials, desired configurations and revisions. Define device versus network
+  credential scope explicitly; never accidentally reuse one network's credentials.
+- Give each network independent interface ownership, listen-port allocation,
+  reconciliation, API/MQTT subscriptions, cached offline operation and failure state.
+- Define explicit network selection for status, peers, wg show, sync, stop and leave,
+  plus an overview of every managed network. Ambiguous mutations must fail clearly.
+- Joining, updating, stopping, leaving or recovering one network must not restart,
+  delete or overwrite another network's interface, routes, credentials or DNS entries.
+- Validate interface names, listen ports, overlapping routes/AllowedIPs and generated
+  hostnames across networks before applying changes; reject unsupported conflicts.
+- Distinguish network-scoped leave/stop from service-wide stop and full uninstall.
+  Uninstall must enumerate all owned networks and preserve unrelated resources.
+- Acceptance: at least two networks managed simultaneously by one service on every
+  supported OS; verify independent traffic, join/leave, update, restart, offline cache,
+  one-network failure isolation, conflict rejection and complete owned-resource cleanup.
