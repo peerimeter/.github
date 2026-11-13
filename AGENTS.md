@@ -17,6 +17,5 @@ This is the independent `peerimeter/.github` repository. It contains the Peerime
 - Keep planning claims aligned with the agent's `README.md`, `progress.md`, implementation, and actual CI evidence. Distinguish implemented features, planned features, and unverified network scenarios.
 - Preserve the two-repository separation. Make changes and commits in the affected repository only; do not treat sibling changes as one atomic commit.
 - Peerimeter uses direct WireGuard connections without a relay. Do not claim STUN alone guarantees NAT traversal.
-- Never commit private keys, tokens, generated client configurations, or production secrets.
-- Commits and pushes to a feature/PR branch are allowed. Use Conventional Commits messages, such as `docs(site): clarify installation` or `fix(plan): correct phase status`. Open a PR for review; do not push work directly to `main` unless explicitly requested.
+- Follow the shared [repository conventions](docs/repository-conventions.md) for secrets, commits, branches, pull requests, checks and completion claims.
 - For site or documentation changes, inspect the rendered content and check that links, status claims, and references to the other repository are accurate. Record the actual checks performed.
