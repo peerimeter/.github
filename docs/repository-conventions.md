@@ -9,6 +9,8 @@ in a repository.
 - Keep each repository buildable and reviewable. Make commits only in the
   repository that owns the files; sibling repositories have separate histories
   and require separate commits and pull requests.
+- Before starting feature work, fetch the latest `origin/main`, fast-forward the
+  local `main` branch, and create the work branch from that updated base.
 - Work on a feature or pull-request branch. Do not push directly to `main` unless
   explicitly requested.
 - Use Conventional Commits, with a repository or component scope where useful.
@@ -34,6 +36,8 @@ in a repository.
   are configured. Let branch protection and required checks decide when it merges.
 - If auto-merge is unavailable, leave the pull request open for manual review.
   Never bypass required checks or branch protection.
+- After a pull request merges, fetch the updated `main`, fast-forward the local
+  `main` branch, and leave the repository checked out on `main`.
 - Run the checks required by the repository's `AGENTS.md` and report those that
   could not run. Do not claim platform or integration behavior without its
   corresponding verification evidence.

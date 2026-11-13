@@ -20,4 +20,5 @@ This is the independent `peerimeter/.github` repository. It contains the Peerime
 - Follow the shared [repository conventions](docs/repository-conventions.md) for secrets, commits, branches, pull requests, checks and completion claims.
 - For every pull request you create or update, inspect all automated review feedback, including CodeRabbit findings. Verify each finding against the current code, fix valid issues, and recheck the PR after pushing.
 - Track each pull request through its lifecycle until it is merged or explicitly closed. Recheck CI, automated reviews, merge conflicts, and auto-merge status after updates; resolve blockers when possible and report the current state. An open PR is ongoing work, not a completed task.
+- Before feature work, update local `main` from `origin/main` and branch from it. After a PR merges, fast-forward local `main` and leave the repository checked out there.
 - For site or documentation changes, inspect the rendered content and check that links, status claims, and references to the other repository are accurate. Record the actual checks performed.
