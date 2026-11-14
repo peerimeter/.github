@@ -285,7 +285,7 @@ Implement diff-based, idempotent reconcile. Normal endpoint/peer updates **must 
 2. After commit, server sends MQTT `{type:"config.updated", network_id, revision}` notification to authorized agents. Use an outbox/retry strategy or periodic sync so a DB/MQTT publish race does not cause permanent divergence.
 3. Agent receives event and fetches `GET /api/v1/agent/config` with device authorization and optional ETag/known revision.
 4. Agent validates schema, network membership, allowed routes, and revision; computes and applies diff.
-5. Agent records applied revision only after successful application; reports errors separately.
+5. Agent records the applied revision only after successful application. It publishes the immediate apply result (revision or error) to its MQTT status topic. The periodic HTTPS heartbeat remains the liveness channel and includes the latest applied revision and recent apply error, allowing recovery reporting while MQTT is unavailable.
 6. Agent also fetches on boot, MQTT reconnect, network change, and a jittered periodic interval (initial default: 60s).
 
 ### MQTT
@@ -347,8 +347,10 @@ or select a broker tier/setup with supported dynamic auth/ACL management.
 PostgreSQL remains authoritative. A committed network change increments its
 revision; the service outbox publishes a small invalidation event to each
 affected device. Each device fetches the full authorized config over HTTPS,
-validates and applies it through the existing reconciler, then reports the
-applied revision or error. A change to a shared network fans out notifications
+validates and applies it through the existing reconciler, then publishes the
+immediate applied revision or error to its MQTT status topic. Periodic HTTPS
+heartbeats carry liveness and the latest applied revision/error so the service
+can observe agents while MQTT is unavailable. A change to a shared network fans out notifications
 to every affected online or offline device; agents do not learn changes by
 subscribing to one another.
 
