@@ -311,8 +311,17 @@ is planned work; today's static CLI remains scoped to a selected runtime/profile
   credential scope explicitly; never accidentally reuse one network's credentials.
 - Give each network independent interface ownership, listen-port allocation,
   reconciliation, API/MQTT subscriptions, cached offline operation and failure state.
-- Define explicit network selection for status, peers, wg show, sync, stop and leave,
-  plus an overview of every managed network. Ambiguous mutations must fail clearly.
+- Expose `peerimeter-agent networks` as an overview of every managed network. In
+  managed mode, `status`, `peers`, `wg show`, `sync` and `diagnose` accept
+  `--network <network-id>` and require it when the target is ambiguous.
+  `reconnect <peer-id> --network <network-id>` and
+  `leave --network <network-id>` always require an explicit selection.
+  `stop --network <network-id>` stops only that network; `service stop` remains
+  service-wide. Ambiguous mutations must fail clearly.
+- Keep `wg` as an alias for `wg show`; `peers --json` and
+  `wg [show] --json` return the same stable public peer data. Static
+  `run --config` remains profile-scoped and independent of managed network
+  selection.
 - Joining, updating, stopping, leaving or recovering one network must not restart,
   delete or overwrite another network's interface, routes, credentials or DNS entries.
 - Validate interface names, listen ports, overlapping routes/AllowedIPs and generated
