@@ -32,12 +32,17 @@ in a repository.
 
 - Open a pull request for review. Describe the behavior changed, validation run,
   and any material limitations. Keep implementation and planning claims aligned.
-- Inspect automated review feedback on the current pull request head and fix
-  valid findings before enabling auto-merge; recheck feedback after pushing.
+- Inspect automated review feedback on the current pull request head, fix valid
+  findings, and resolve every review conversation before enabling auto-merge;
+  recheck feedback after pushing.
+- Verify repository settings require all review conversations to be resolved
+  and require branches to be up to date before merging.
 - Enable GitHub auto-merge when repository settings show required status checks
-  are configured and passing; satisfy any review approvals branch protection
-  requires. Let branch protection decide when it merges.
-- If required checks are absent or auto-merge cannot be enabled, leave the pull
+  are configured and passing and all review conversations are resolved; satisfy
+  any review approvals branch protection requires. Let branch protection decide
+  when it merges.
+- If required checks, conversation-resolution protection, or the up-to-date
+  branch requirement are absent, or auto-merge cannot be enabled, leave the pull
   request open and report the blocker. Never bypass branch protection or merge
   around required checks.
 - After a pull request merges, fetch the updated `main`, fast-forward the local
