@@ -21,20 +21,19 @@ See [the implementation plan](https://github.com/peerimeter/.github/blob/main/do
 
 ## GitHub pull request settings
 
-Checked through the GitHub REST API on **2026-11-14**. Both repositories allow
-auto-merge and rebase-only merges, require linear history, and delete branches
-after merge. Neither requires an approving review, and admin enforcement is off.
+Checked through the GitHub REST API on **2026-11-14**, after the branch-protection
+settings were updated. Both repositories allow auto-merge and rebase-only merges,
+require linear history, require up-to-date branches and resolved review
+conversations, and delete branches after merge. Neither requires an approving
+review, and admin enforcement is off.
 
 | Repository | Required status checks on `main` | Require up-to-date branch | Require all review conversations resolved |
 | --- | --- | --- | --- |
-| [`peerimeter/.github`](https://github.com/peerimeter/.github) | `CodeRabbit` | No (`strict: false`) | No (API reports disabled) |
-| [`peerimeter/peerimeter-agent`](https://github.com/peerimeter/peerimeter-agent) | `check`, `CodeRabbit` | Yes (`strict: true`) | No (API reports disabled) |
+| [`peerimeter/.github`](https://github.com/peerimeter/.github) | `CodeRabbit` | Yes (`strict: true`) | Yes |
+| [`peerimeter/peerimeter-agent`](https://github.com/peerimeter/peerimeter-agent) | `check`, `CodeRabbit` | Yes (`strict: true`) | Yes |
 
-The settings are not identical: the agent repository also requires the
-pipeline's aggregate `check` and strict up-to-date branches. The `.github`
-repository does not currently require branches to be up to date, and neither
-repository currently enforces conversation resolution. These settings do not
-match the intended policy. Until branch protection is updated, inspect, address
-and resolve every PR review conversation and update the PR branch before
-enabling auto-merge; never rely on current GitHub settings to enforce these
-requirements. Refresh this summary when repository rules change.
+The settings now match on branch freshness and conversation resolution. The
+agent repository additionally requires the pipeline's aggregate `check`. Keep
+inspecting, addressing and resolving review conversations before auto-merge;
+GitHub now enforces both conversation resolution and branch freshness. Refresh
+this summary when repository rules change.
