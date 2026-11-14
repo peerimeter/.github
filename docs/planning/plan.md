@@ -199,27 +199,33 @@ Keep runtime endpoint candidates/status separately, with TTL and last validation
 
 ```bash
 peerimeter-agent run --config ./peerimeter.static.json
-peerimeter-agent service install --config /absolute/path/peerimeter.static.json
+peerimeter-agent service install [--config /absolute/path/peerimeter.static.json]
 peerimeter-agent join --token <base64url-json-bundle>
 peerimeter-agent join --token-file /secure/path/join-token.txt
-peerimeter-agent service install
+peerimeter-agent join --token-file /secure/path/join-token.txt --interface wg-prod
+peerimeter-agent networks
+peerimeter-agent status [--network <network-id>]
+peerimeter-agent peers [--network <network-id>] [--json]
+peerimeter-agent wg [show] [--network <network-id>] [--json]
+peerimeter-agent sync [--network <network-id>]
+peerimeter-agent stop --network <network-id>
+peerimeter-agent diagnose [--network <network-id>] [--peer <peer-id>]
+peerimeter-agent reconnect <peer-id> --network <network-id>
+peerimeter-agent leave --network <network-id>
 peerimeter-agent service start
 peerimeter-agent service stop
 peerimeter-agent service uninstall
 peerimeter-agent uninstall --dry-run
 peerimeter-agent uninstall
-peerimeter-agent status
-peerimeter-agent peers
-peerimeter-agent sync
-peerimeter-agent diagnose [--peer <id>]
-peerimeter-agent reconnect <peer-id>
-peerimeter-agent leave
 peerimeter-agent version
 ```
 
 - CLI commands control an already-running service over authenticated **local IPC**; they must not start a competing WG manager.
 - Linux/macOS: protected Unix domain socket. Windows: protected named pipe.
 - `run --config` is a first-class **offline static mode**, with zero API/MQTT/STUN/SSO dependency. `join --token` is the future online enrollment flow: it decodes a versioned Base64URL JSON bundle containing the API URL and opaque enrollment secret (no separate `--server` required). `join` is a controlled enrollment flow; do not expose token/credentials in logs. For unattended enrollment, document secure invocation and token lifetime.
+- `networks` lists every managed network and its current health, revision, and interface summary. In managed mode, `status`, `peers`, `wg show`, `sync`, and `diagnose` accept `--network <network-id>`; require it when more than one network makes the request ambiguous. `reconnect` and `leave` always require an explicit network selection. `peers --json` and `wg [show] --json` expose the same stable public peer data. Bare `wg` is an alias for `wg show`.
+- `stop --network <network-id>` stops only the selected network. `service stop` stops the agent service and all managed networks; `service start` restarts the service and recovers their last-known-good configurations. `service uninstall` removes service registration while preserving managed identities/configuration. Top-level `uninstall` removes the installation and all resources owned by it; `--dry-run` reports the planned removals.
+- In offline static mode, `run --config` and supported local inspection commands remain scoped to the selected config/runtime profile and do not accept managed `--network` selection. `join` adds a network to the managed service; it does not replace or implicitly remove other networks.
 - Service manager: systemd / launchd / Windows Service. Boot activation and restart-on-failure policies must be explicit.
 - Privileged agent controls routing and WG; CLI/UI do not require long-lived root/admin identity.
 - Agent service's startup mode must remain independent of the browser/dashboard.
