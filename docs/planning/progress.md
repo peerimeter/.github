@@ -16,7 +16,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 
 | Phase | Status | Verification / notes |
 |---|---|---|
-| 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/peers explicitly belong to Phase 1 |
+| 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/`wg show` belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Server + join bundles + sync | ⬜ Not started | Includes managed peer host-file entries with configurable `$hostName.$networkName` naming |
 | 3 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
@@ -36,15 +36,15 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 
 Status must be one of: **not run / passed / failed / blocked**. Do not change any cell to `passed` without native runner evidence. Record workflow run URLs, commit SHA, date, runner image, WireGuard backend and blockers in the log below.
 
-| OS runner | Build + unit + static JSON (`ci.yml`) | Real WG handshake + traffic (`wireguard-integration.yml`) | Cross-OS / disruption E2E (`connectivity-e2e.yml`) |
-|---|---|---|---|
-| Ubuntu 24.04 | passed (`4246c6b`) | passed — actual agent (`04648b9`) | not run |
-| macOS 15 | passed (`4246c6b`) | passed — actual agent (`04648b9`) | not run |
-| Windows 2022 | passed (`4246c6b`) | passed — actual agent (`04648b9`) | not run |
+| OS runner | Native build/unit/CLI (`pipeline.yml:test`) | Real agent traffic/service (`pipeline.yml:integration`) | Native package/install (`pipeline.yml:package`) | Mixed-OS/disruption (`connectivity-e2e.yml`) |
+|---|---|---|---|---|
+| Ubuntu 24.04 | passed (`4246c6b`) | passed — actual agent (`04648b9`) | passed (`4246c6b`) | blocked — no mixed-OS topology |
+| macOS 15 | passed (`4246c6b`) | passed — actual agent (`04648b9`) | passed (`4246c6b`) | blocked — no mixed-OS topology |
+| Windows 2022 | passed (`4246c6b`) | passed — actual agent (`04648b9`) | passed (`4246c6b`) | blocked — no mixed-OS topology |
 
-- [x] `peerimeter-agent/.github/workflows/ci.yml` added; matrix runs natively on all three OSes, not just cross-compile.
-- [x] `peerimeter-agent/.github/workflows/wireguard-integration.yml` now runs real agent handshake/traffic, restart, cleanup, IPC/operator and native service lifecycle on all three OSes.
-- [ ] `peerimeter-agent/.github/workflows/connectivity-e2e.yml` added with Linux namespaces and provision for mixed-OS tests.
+- [x] `peerimeter-agent/.github/workflows/pipeline.yml` runs native build/unit/CLI tests, real agent integration and package/installer gates; its aggregate `check` job gates PR completion.
+- [x] The pipeline's integration matrix runs real agent handshake/traffic, restart, cleanup, IPC/operator and native service lifecycle on all three OSes.
+- [x] `peerimeter-agent/.github/workflows/connectivity-e2e.yml` exists as a manual entry point and reports a blocked result until a mixed-OS/NAT topology is provisioned; no connectivity pass is claimed.
 - [x] macOS/Windows GitHub-hosted tunnel feasibility checked: both passed on the exact target images; no self-hosted fallback currently needed.
 - [x] All integration skips and missing infrastructure are reported explicitly, never as a pass; agent E2E remains unavailable and manual E2E workflow fails with a blocked explanation.
 - [ ] `peerimeter-service` independent CI added at Phase 2.
@@ -57,7 +57,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - [x] P0 static JSON schema versioning, validation and protected local key references.
 - [x] `peerimeter-agent run --config <path>` makes no API/MQTT/STUN calls.
 - [x] Real WireGuard connectivity from static configs on Linux, macOS and Windows, each natively verified.
-- [x] systemd, launchd and Windows Service lifecycle with local offline `status` and `peers`.
+- [x] systemd, launchd and Windows Service lifecycle with local offline `status` and `wg show`.
 - [ ] Static config remains usable after online enrollment is added.
 - [ ] Phase 2 join bundle is Base64URL(unpadded JSON with `version`, `api_url`, `enrollment_token`).
 - [ ] `join --token <bundle>` derives server URL from token; `--token-file` supported.
@@ -81,7 +81,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 - Created [peerimeter-agent](https://github.com/peerimeter/peerimeter-agent) as an independent repository. No service code/repository created ahead of Phase 2.
 - Implemented versioned strict static JSON parsing/validation, two public templates, secure fresh example generation, private key handling, Linux naming/ownership helpers, platform interfaces and foreground cleanup lifecycle tests.
-- Functional `run`, local `status`/`peers`, safe `sync`/`stop`, protected operator IPC, and native service lifecycle are implemented and tested. Cobra owns CLI parsing/help/completion. An additional package workflow builds release archives and verifies installers.
+- Functional `run`, local `status`/`wg show`, safe `sync`/`stop`, protected operator IPC, and native service lifecycle are implemented and tested. Cobra owns CLI parsing/help/completion. The package workflow builds release archives and verifies installers.
 - Go **1.27.4** is required in the plan, modules and native CI. Agent self-update is a Phase 7 task.
 - Backend feasibility uses real official WireGuard implementations, independent of the unfinished agent.
 
@@ -285,3 +285,25 @@ multi-network management by one agent service. Phase 2 now includes independent
 network state/lifecycle, CLI selection/overview, conflict validation and two-network
 native acceptance tests; details are in additional-plan.md A12. This is planned
 work and does not claim that multi-network service management is implemented.
+
+## Agent implementation review — 2026-11-14
+
+Reviewed the current sibling `peerimeter-agent` tree at implementation commit
+`0c258558099a3fe1258806d9819806b2c66023e6` (with later documentation/CI-name
+commits at `360a42e`). The accepted Phase 1 core remains complete; managed
+enrollment, MQTT sync and multi-network commands remain Phase 2 work.
+
+Since the original Phase 1 acceptance, the CLI gained a live `status --watch`
+view with an interval option and JSON-lines snapshots, responsive terminal
+tables, interactive STUN progress/cancellation, refined `wg` / `wg show` output,
+color/output controls, and installer progress reporting. The current CLI has no
+standalone `peers`, `join`, or `networks` command. STUN is implemented as a
+mapping probe, but native checks and live behavior for that add-on remain pending.
+
+The agent CI has consolidated native unit/build checks, actual agent integration,
+packages/installers and an aggregate PR `check` into `pipeline.yml`. The separate
+`connectivity-e2e.yml` is a manual blocked placeholder until mixed-OS/NAT test
+infrastructure is provisioned. The sibling progress log reports local checks
+for the later CLI changes, but no fresh native pipeline run was available for
+that reviewed snapshot; the native pass cells above refer only to their recorded
+historical SHAs and must not be read as verification of `0c25855`.

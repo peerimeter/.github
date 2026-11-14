@@ -68,7 +68,7 @@ Use whichever protected local configuration format is already selected by `plan.
 
 ### CLI UX
 
-`peerimeter-agent status` and `peerimeter-agent peers` should clearly identify the network and the actual local interface, for example:
+`peerimeter-agent status` and `peerimeter-agent wg show` should clearly identify the network and the actual local interface, for example:
 
 ```text
 Network: production (network-id)
@@ -122,7 +122,7 @@ peerimeter-agent run --config ./peerimeter.static.json
 peerimeter-agent service install --config /absolute/path/peerimeter.static.json
 peerimeter-agent service start
 peerimeter-agent status
-peerimeter-agent peers
+peerimeter-agent wg show
 # Linux only: local override at initialization (also persist for future service use)
 peerimeter-agent run --config ./peerimeter.static.json --interface wg-prod
 ```
@@ -132,7 +132,7 @@ peerimeter-agent run --config ./peerimeter.static.json --interface wg-prod
 - Do not make `join` a prerequisite to `run --config`; static and managed modes share the same WireGuard reconciliation engine but have different config providers.
 - Support safe restarts and service installation for systemd (Linux), launchd (macOS), and Windows Service. Native OS adapter integration is mandatory, not simulated by Linux-specific commands.
 - Explicitly document required privileges, WireGuard backend/install prerequisites and route/adapter behavior for each OS. Windows/macOS adapters must be implemented and tested on their actual OS; cross-compilation is only an early check.
-- The CLI should show usable offline `status`/`peers`, using local daemon IPC or local WireGuard state, with no server dependencies.
+- The CLI should show usable offline `status` and `wg show` views, using local daemon IPC or local WireGuard state, with no server dependencies.
 
 ### Static JSON schema (illustrative, versioned)
 
@@ -215,8 +215,8 @@ Acceptance criteria:
 
 ## A6. Revised execution order and Codex instructions
 
-1. **Phase 0:** cross-platform project baseline, versioned static JSON model, functional offline config validation, CLI command/argument contracts, and testable lifecycle/adapter interfaces. Native build/unit/CLI validation and early backend feasibility checks belong here. Runtime-dependent CLI commands must explicitly report unavailable until Phase 1; operational tunnels and local status/peers are not Phase 0 completion gates.
-2. **Phase 1:** actual Linux, macOS and Windows static WireGuard agents and services (API-free), including operational `run --config`, local `status` and `peers`, authenticated local IPC or real local WireGuard state, with native verification. This implements the runtime behind the Phase 0 CLI contracts.
+1. **Phase 0:** cross-platform project baseline, versioned static JSON model, functional offline config validation, CLI command/argument contracts, and testable lifecycle/adapter interfaces. Native build/unit/CLI validation and early backend feasibility checks belong here. Runtime-dependent CLI commands must explicitly report unavailable until Phase 1; operational tunnels and local status/`wg show` are not Phase 0 completion gates.
+2. **Phase 1:** actual Linux, macOS and Windows static WireGuard agents and services (API-free), including operational `run --config`, local `status` and `wg show`, authenticated local IPC or real local WireGuard state, with native verification. This implements the runtime behind the Phase 0 CLI contracts.
 3. **Phase 2:** central API, PostgreSQL, join bundles (`api_url` + `enrollment_token`), MQTT and online config provider, reusing static mode's reconciler.
 4. **Phase 3:** STUN, direct NAT traversal, dynamic IP recovery/self-healing.
 5. **Phase 4:** browser dashboard and GitHub SSO.
@@ -240,11 +240,10 @@ Acceptance criteria:
 
 ## A8. Mandatory native cross-platform GitHub Actions tests (P0/P1)
 
-GitHub Actions is required **from Phase 0**, within `peerimeter-agent` (not in a monorepo). Implement three independent workflows:
+GitHub Actions is required **from Phase 0**, within `peerimeter-agent` (not in a monorepo). The current agent implementation consolidates routine validation, native integration and release packaging in `pipeline.yml`; keep mixed-topology E2E separate:
 
-1. `.github/workflows/ci.yml`: on push and pull request, native jobs on `ubuntu-24.04`, `macos-15`, `windows-2022` with `fail-fast: false`; `go test ./...`, `go build`, static JSON validation and CLI smoke tests. Successful cross-compilation alone does not pass the gate.
-2. `.github/workflows/wireguard-integration.yml`: on pull request and `workflow_dispatch` (optionally scheduled); privileged platform-specific tests that create an actual WireGuard interface, configure two peers, verify a real handshake and bidirectional traffic, and prove cleanup and restart. Prefer GitHub-hosted runners **only where the WireGuard backend really works**; probe early. Fall back to secured self-hosted macOS/Windows/Linux runners when required. Keep integration tests separately tagged (e.g. `-tags=integration`).
-3. `.github/workflows/connectivity-e2e.yml`: manual/scheduled tests for Linux network namespace NAT/IP-change simulation, and reachable cross-OS WireGuard test connectivity. Jobs on separate OS runner VMs are not automatically in one LAN; arrange a reachable test peer or test network. No application relay.
+1. `.github/workflows/pipeline.yml`: on pull requests, pushes to `main` and manual dispatch, run native `test` and privileged `integration` jobs on `ubuntu-24.04`, `macos-15`, and `windows-2022` with `fail-fast: false`; also build packages and run native installer tests. The aggregate `check` job must fail if any PR gate is unsuccessful. Successful cross-compilation alone does not pass the native gate.
+2. `.github/workflows/connectivity-e2e.yml`: manual E2E entry point for Linux network-namespace NAT/IP-change simulation and reachable cross-OS WireGuard connectivity. Until the topology exists, report a visible blocked result; do not claim this placeholder as a connectivity pass. Jobs on separate OS runner VMs are not automatically in one LAN; arrange a reachable test peer or test network. No application relay.
 
 **Acceptance evidence per OS:** runner/image, backend prerequisites, tested commit SHA, native interface creation, successful authenticated handshake, bidirectional tunnel traffic, agent restart/teardown, test log, and status. Test-status vocabulary: `passed`, `failed`, `blocked`, or `not run`. Never silently skip required checks, and never report `passed` for an unverified OS. If GitHub-hosted macOS or Windows cannot run a native WG tunnel, record the limitation and use a self-hosted runner; don't loosen the acceptance criteria.
 
@@ -276,11 +275,11 @@ reviewed file revision is `47ad6fc7d7a95296fe893b49c1d4584b4eb6ac40` (MIT-licens
 Refactor the relevant formatting into testable agent code; do not embed the
 example main/flag/log.Fatal structure or introduce a second CLI parser.
 
-- Updated CLI requirement (2026-11-13): `wg show` provides the traditional
-  wgshow-style human-readable output, and bare `wg` defaults to `wg show`.
-  `peers` provides a modern Lip Gloss overview. Preserve `peers --json`; `wg`
-  and `wg show` also accept `--json` for the same stable public peer data.
-  Keep the Cobra command in its own source file
+- CLI implementation update (reviewed 2026-11-14): `wg show` provides the
+  traditional wgshow-style human-readable peer listing, and bare `wg` defaults
+  to the same view. Both accept `--json` and return the stable public peer
+  array. `status` renders the agent/interface state and peer summary; there is
+  no separate `peers` CLI command. Keep the Cobra command in its own source file
   and separate state acquisition, formatting, color policy and I/O.
 - Read actual authorized local agent/backend snapshots on Linux, macOS and
   Windows. Do not bypass daemon ownership by opening a competing WireGuard
@@ -294,8 +293,8 @@ example main/flag/log.Fatal structure or introduce a second CLI parser.
   connectivity. Honor NO_COLOR, redirected output and explicit color controls.
 - Preserve applicable copyright/license attribution when adapting code. Add
   focused renderer tests, plain/color/JSON CLI tests and native integration
-  assertions against real backend state. Existing automation must opt into
-  `peers --json` when parsing peer data. Completion requires implementation,
+  assertions against real backend state. Automation must opt into `wg --json`
+  or `wg show --json` when parsing peer data. Completion requires implementation,
   native verification and independent review; see progress.md for evidence.
 
 
@@ -312,14 +311,14 @@ is planned work; today's static CLI remains scoped to a selected runtime/profile
 - Give each network independent interface ownership, listen-port allocation,
   reconciliation, API/MQTT subscriptions, cached offline operation and failure state.
 - Expose `peerimeter-agent networks` as an overview of every managed network. In
-  managed mode, `status`, `peers`, `wg show`, `sync` and `diagnose` accept
+  managed mode, `status`, `wg show`, `sync` and `diagnose` accept
   `--network <network-id>` and require it when the target is ambiguous.
   `reconnect <peer-id> --network <network-id>` and
   `leave --network <network-id>` always require an explicit selection.
   `stop --network <network-id>` stops only that network; `service stop` remains
   service-wide. Ambiguous mutations must fail clearly.
-- Keep `wg` as an alias for `wg show`; `peers --json` and
-  `wg [show] --json` return the same stable public peer data. Static
+- Keep `wg` as an alias for `wg show`; `wg [show] --json` returns the stable
+  public peer data. Static
   `run --config` remains profile-scoped and independent of managed network
   selection.
 - Joining, updating, stopping, leaving or recovering one network must not restart,
