@@ -300,6 +300,121 @@ Payload example:
 
 Use QoS 1 with idempotent event handling; no assumption of exactly-once or guaranteed instantaneous delivery. MQTT is not a channel for private credentials or full config. Device-scoped topics are preferable for sensitive updates. If MQTT fails, keep tunnels alive and resync via API.
 
+### Managed MQTT option: EMQX Cloud Serverless
+
+EMQX Cloud Serverless may be used for an early hosted-broker evaluation, while
+keeping the service's MQTT contract broker-agnostic. The current self-hosted
+deployment plan remains Mosquitto unless a later deployment decision replaces
+it. EMQX topics do not need to be pre-created: authorization rules control
+whether a client can publish or subscribe to a topic.
+
+Use a unique MQTT identity and secret for each enrolled device. Scope device
+permissions to its own update and status topics, for example:
+
+| Client | Action | Topic |
+| --- | --- | --- |
+| Device `A` | Subscribe | `peerimeter/agents/A/updates` |
+| Device `A` | Publish | `peerimeter/agents/A/status` |
+| Service | Publish | `peerimeter/agents/{device_id}/updates` (one concrete topic per device) |
+| Service | Subscribe | `peerimeter/agents/+/status` |
+
+The service owns broker administration credentials; never put them in an agent.
+An agent's MQTT secret is separate from its WireGuard private key and API
+credential. Deny access by default and grant only the required device-scoped
+publish/subscribe operations. With two device rules per agent, ten agents use
+about twenty authorization entries, plus service and any shared rules. EMQX
+Serverless currently documents limits of 2,000 authentication entries and
+2,000 authorization entries; check current quotas before deployment.
+
+**Provisioning gate:** do not assume EMQX Serverless supports dynamic device
+credential and ACL management from the Peerimeter service. Its documented
+Serverless Deployment API lists client/subscription management and message
+publishing, but does not list authentication or authorization CRUD. External
+authentication and authorization are also unavailable on Serverless. Before
+selecting it for production enrollment, verify a supported way to provision
+and revoke unique device credentials and topic permissions. Do not solve this
+by distributing an EMQX management API secret to agents. If no supported
+provisioning path exists, use manual provisioning only for a small prototype
+or select a broker tier/setup with supported dynamic auth/ACL management.
+
+#### Update flow
+
+PostgreSQL remains authoritative. A committed network change increments its
+revision; the service outbox publishes a small invalidation event to each
+affected device. Each device fetches the full authorized config over HTTPS,
+validates and applies it through the existing reconciler, then reports the
+applied revision or error. A change to a shared network fans out notifications
+to every affected online or offline device; agents do not learn changes by
+subscribing to one another.
+
+```mermaid
+sequenceDiagram
+    participant Admin as Admin or dashboard
+    participant Service as Peerimeter service
+    participant DB as PostgreSQL
+    participant Broker as EMQX Cloud or MQTT broker
+    participant AgentA as Agent A
+    participant AgentB as Agent B
+
+    Admin->>Service: Change network or peer configuration
+    Service->>DB: Commit change and increment network revision
+    DB-->>Service: Commit succeeds
+    Service->>Broker: Publish config.updated to Agent A topic
+    Service->>Broker: Publish config.updated to Agent B topic
+    Broker-->>AgentA: Deliver invalidation event
+    Broker-->>AgentB: Deliver invalidation event
+    AgentA->>Service: Fetch authorized config over HTTPS
+    AgentB->>Service: Fetch authorized config over HTTPS
+    Service-->>AgentA: Full config at new revision
+    Service-->>AgentB: Full config at new revision
+    AgentA->>AgentA: Validate and reconcile WireGuard state
+    AgentB->>AgentB: Validate and reconcile WireGuard state
+    AgentA->>Broker: Publish applied revision or error to status topic
+    AgentB->>Broker: Publish applied revision or error to status topic
+```
+
+```mermaid
+flowchart LR
+    Admin[Admin or dashboard] --> Service[Peerimeter service]
+    Service --> DB[(PostgreSQL authoritative state)]
+    Service -->|per-device invalidation| Broker[MQTT broker]
+    Broker --> AgentA[Agent A]
+    Broker --> AgentB[Agent B]
+    AgentA -->|HTTPS config fetch and status| Service
+    AgentB -->|HTTPS config fetch and status| Service
+    AgentA <-->|direct encrypted data plane| AgentB
+```
+
+#### Outage and recovery behavior
+
+If the service is unavailable, agents keep their last successfully applied
+configuration and existing tunnels; no new authoritative update can be
+generated. If MQTT is unavailable, agents still keep their tunnels and recover
+by fetching configuration on boot, MQTT reconnect, network change, and a
+jittered periodic interval. The service uses a transactional outbox/retry
+strategy, while the agent's periodic HTTPS reconciliation repairs missed or
+duplicated notifications. MQTT events are hints, not the source of truth;
+retained messages may be an optimization but are never the only recovery path.
+
+```mermaid
+sequenceDiagram
+    participant Service as Peerimeter service
+    participant DB as PostgreSQL
+    participant Broker as MQTT broker
+    participant Agent as Agent
+
+    Service->>DB: Commit revision and outbox event
+    Service-xBroker: Publish fails during broker outage
+    Agent->>Agent: Keep last applied config and tunnel
+    Broker-->>Service: Broker becomes available
+    Service->>DB: Retry pending outbox event
+    Service->>Broker: Publish latest revision notification
+    Broker-->>Agent: Deliver event after reconnect
+    Agent->>Service: Fetch current config over HTTPS
+    Service-->>Agent: Return authoritative current revision
+    Agent->>Agent: Reconcile and report applied revision
+```
+
 ### Example agent config (illustrative)
 
 ```json
