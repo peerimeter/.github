@@ -32,19 +32,18 @@ in a repository.
 
 - Open a pull request for review. Describe the behavior changed, validation run,
   and any material limitations. Keep implementation and planning claims aligned.
-- Inspect automated review feedback on the current pull request head, fix valid
-  findings, and resolve every review conversation before enabling auto-merge;
-  recheck feedback after pushing.
-- Verify repository settings require all review conversations to be resolved
-  and require branches to be up to date before merging.
-- Enable GitHub auto-merge when repository settings show required status checks
-  are configured and passing and all review conversations are resolved; satisfy
-  any review approvals branch protection requires. Let branch protection decide
-  when it merges.
+- Auto-merge is the default for every PR. After opening one, verify that
+  repository settings require status checks, resolved review conversations, and
+  branches to be up to date before merging; then enable auto-merge immediately.
+  Let branch protection and any required approvals gate the merge.
+- Inspect automated review feedback on every current PR head, fix valid findings,
+  and resolve every review conversation before the PR can merge. Recheck feedback
+  after pushing; required checks, conversation resolution, and branch freshness
+  must pass before auto-merge completes.
 - If required checks, conversation-resolution protection, or the up-to-date
-  branch requirement are absent, or auto-merge cannot be enabled, leave the pull
-  request open and report the blocker. Never bypass branch protection or merge
-  around required checks.
+  branch requirement are absent, leave auto-merge disabled and report the
+  configuration gap. Never bypass branch protection or merge around required
+  checks.
 - After a pull request merges, fetch the updated `main`, fast-forward the local
   `main` branch, and leave the repository checked out on `main`.
 - Run the checks required by the repository's `AGENTS.md` and report those that
