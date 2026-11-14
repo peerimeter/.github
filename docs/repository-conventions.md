@@ -32,10 +32,11 @@ in a repository.
 
 - Open a pull request for review. Describe the behavior changed, validation run,
   and any material limitations. Keep implementation and planning claims aligned.
-- Enable GitHub auto-merge when the repository supports it and required checks
-  are configured. Let branch protection and required checks decide when it merges.
-- If auto-merge is unavailable, leave the pull request open for manual review.
-  Never bypass required checks or branch protection.
+- Enable GitHub auto-merge on every pull request so it merges when configured
+  required reviews and checks pass. Let branch protection decide when it merges.
+- If auto-merge cannot be enabled, or required checks/reviews are not configured,
+  leave the pull request open and report the blocker. Never bypass branch
+  protection or manually merge around required checks.
 - After a pull request merges, fetch the updated `main`, fast-forward the local
   `main` branch, and leave the repository checked out on `main`.
 - Run the checks required by the repository's `AGENTS.md` and report those that

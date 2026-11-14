@@ -18,6 +18,7 @@ This is the independent `peerimeter/.github` repository. It contains the Peerime
 - Preserve the two-repository separation. Make changes and commits in the affected repository only; do not treat sibling changes as one atomic commit.
 - Peerimeter uses direct WireGuard connections without a relay. Do not claim STUN alone guarantees NAT traversal.
 - Follow the shared [repository conventions](docs/repository-conventions.md) for secrets, commits, branches, pull requests, checks and completion claims.
+- Enable GitHub auto-merge on every pull request you open or update, so it merges automatically once required reviews and checks pass. Never bypass branch protection; if auto-merge cannot be enabled or a repository has no required checks/reviews configured, leave the PR open and report the blocker.
 - For every pull request you create or update, inspect all automated review feedback, including CodeRabbit findings. Verify each finding against the current code, fix valid issues, and recheck the PR after pushing.
 - Track each pull request through its lifecycle until it is merged or explicitly closed. Recheck CI, automated reviews, merge conflicts, and auto-merge status after updates; resolve blockers when possible and report the current state. An open PR is ongoing work, not a completed task.
 - Before feature work, update local `main` from `origin/main` and branch from it. After a PR merges, fast-forward local `main` and leave the repository checked out there.
