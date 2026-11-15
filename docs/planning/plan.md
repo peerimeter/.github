@@ -10,7 +10,7 @@
 
 - **Implementation:** Luna.
 - **Phase planning and independent review:** Sol.
-- Keep review separate from the implementation author. Record the actual reviewer/model and reviewed SHA in `progress.md`; do not retroactively attribute earlier reviews to a model that was not identified.
+- Keep review separate from the implementation author. Record the actual reviewer/model and reviewed SHA in `docs/planning/progress.md`; do not retroactively attribute earlier reviews to a model that was not identified.
 
 1. Inspect both repository directories first (if present). Preserve existing decisions and code unless they conflict with this plan. If the repository is empty, initialize it according to the structure below.
 2. Work **phase by phase** and in small, reviewable changes. **First deliver static-JSON, API-free direct WireGuard connectivity on Linux, macOS, and Windows** before implementing the server, enrollment, MQTT, STUN or browser UI.
@@ -23,7 +23,7 @@
 9. Document what genuinely works per OS. Do not label Windows/macOS support complete until verified with real platform-specific integration tests.
 10. **Do not expand the scope** to desktop apps, mobile apps, relay, exit nodes, MagicDNS, Kubernetes, HA, or sophisticated service-level ACLs unless explicitly requested later.
 11. If implementing everything in one run is not feasible, finish the current coherent phase, update the progress checklist in this document, and summarize remaining work. Do not silently claim phases are complete.
-12. **Mandatory phase-end independent review:** Before marking any phase complete from this point onward, run a separate review agent that did not implement the changes it reviews. Give it the phase requirements, final code/diff, tested commit SHA, native test evidence and documented limitations. A different model may be used when available; record the actual reviewer/model rather than assuming model diversity. Review requirement coverage, correctness, security, lifecycle/cleanup, tests and accuracy of documentation/status claims. Fix findings that block correctness, security or phase acceptance, rerun affected checks, and have the reviewer verify those fixes. Record the reviewed SHA, findings, resolutions, remaining explicitly deferred items and final review outcome in progress.md. Do not mark a phase complete while blocking findings remain; do not represent self-review or a passing CI job as an independent agent review. This gate applies to the ongoing Phase 1 and subsequent phases; earlier Phase 0 evidence remains historical.
+12. **Mandatory phase-end independent review:** Before marking any phase complete from this point onward, run a separate review agent that did not implement the changes it reviews. Give it the phase requirements, final code/diff, tested commit SHA, native test evidence and documented limitations. A different model may be used when available; record the actual reviewer/model rather than assuming model diversity. Review requirement coverage, correctness, security, lifecycle/cleanup, tests and accuracy of documentation/status claims. Fix findings that block correctness, security or phase acceptance, rerun affected checks, and have the reviewer verify those fixes. Record the reviewed SHA, findings, resolutions, remaining explicitly deferred items and final review outcome in `docs/planning/progress.md`. Do not mark a phase complete while blocking findings remain; do not represent self-review or a passing CI job as an independent agent review. This gate applies to the ongoing Phase 1 and subsequent phases; earlier Phase 0 evidence remains historical.
 
 
 ## 1. Product goals and non-goals
@@ -131,10 +131,13 @@ The directory containing the two repositories is only a local workspace, **not a
 
 ```text
 workspace/
-├── plan.md                  # planning handoff; not its own git repo
-├── additional-plan.md
-├── progress.md              # overall progress; repo-specific status noted
-├── codex-prompt.md
+├── .github/                 # shared planning repository
+│   ├── .git/
+│   └── docs/planning/
+│       ├── plan.md
+│       ├── additional-plan.md
+│       ├── progress.md      # shared tracker for both code repositories
+│       └── codex-prompt.md
 ├── peerimeter-agent/           # its own .git and go.mod
 │   ├── .git/
 │   ├── go.mod
@@ -163,7 +166,7 @@ workspace/
 
 **Cross-repo contract:** Do not use `replace ../peerimeter-*`, cross-repo `internal/` imports, symlinks, or vendored source as the long-term integration strategy. Define a versioned HTTP/JSON and MQTT message contract (OpenAPI + JSON schemas, or generated versioned Go client package) owned by `peerimeter-service`, with pinned releases or schema snapshots consumed by `peerimeter-agent`. Schema evolution must be backward compatible or versioned explicitly. Use contract compatibility tests on both repositories. For P0/P1 the agent must compile and function without cloning the service repository or obtaining any server schema.
 
-**Coordination:** Make commits only in the affected repository, and record each repository's commit hash, test results and current milestone separately in `progress.md`. Do not imply cross-repo atomic commits. The service owns persistence and authentication; the agent owns all OS network operations. Keep `peerimeter-agent` operational when the service is offline.
+**Coordination:** Make commits only in the affected repository, and record each repository's commit hash, test results and current milestone separately in `docs/planning/progress.md`. Do not imply cross-repo atomic commits. The service owns persistence and authentication; the agent owns all OS network operations. Keep `peerimeter-agent` operational when the service is offline.
 
 ## 5. Core data model
 
@@ -227,7 +230,7 @@ peerimeter-agent completion bash|zsh|fish|powershell
 - CLI commands control an already-running service over authenticated **local IPC**; they must not start a competing WG manager.
 - Linux/macOS: protected Unix domain socket. Windows: protected named pipe.
 - `service uninstall` removes service registration while preserving protected configuration and keys. Top-level `uninstall` removes tracked resources owned by the installation; `--dry-run` reports planned removals. These commands are distinct and must remain clearly documented.
-- **Planned Phase 2 managed commands (not implemented):** `join --token <base64url-json-bundle>` or `join --token-file <path> [--interface <name>]`, `networks`, managed `status`/`wg show`/`sync`/`stop --network <network-id>`, `diagnose --network <network-id> [--peer <peer-id>]`, `reconnect <peer-id> --network <network-id>`, and `leave --network <network-id>`. The join bundle carries the HTTPS API URL and opaque enrollment secret; there is no separate `--server` argument. `join` adds a network without replacing other managed networks. Device selection must be explicit when ambiguous, and `service stop` remains service-wide.
+- **Planned Phase 3 managed commands (not implemented):** `join --token <base64url-json-bundle>` or `join --token-file <path> [--interface <name>]`, `networks`, managed `status`/`wg show`/`sync`/`stop --network <network-id>`, `diagnose --network <network-id> [--peer <peer-id>]`, `reconnect <peer-id> --network <network-id>`, and `leave --network <network-id>`. The join bundle carries the HTTPS API URL and opaque enrollment secret; there is no separate `--server` argument. `join` adds a network without replacing other managed networks. Device selection must be explicit when ambiguous, and `service stop` remains service-wide.
 - Service manager: systemd / launchd / Windows Service. Boot activation and restart-on-failure policies must be explicit.
 - Privileged agent controls routing and WG; CLI/UI do not require long-lived root/admin identity.
 - Agent service's startup mode must remain independent of the browser/dashboard.
@@ -653,7 +656,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 - Linux: prefer two peers in isolated network namespaces/veth on a runner with real WireGuard support; then add NAT, endpoint/IP-change, packet-loss and agent-restart scenarios. Check WireGuard kernel/userspace prerequisites rather than assuming a given hosted image has them.
 - macOS: test actual `utun`/userspace backend and route lifecycle under supported runner permissions. Windows: test actual WireGuard adapter/tunnel service including driver/package prerequisites. **GitHub-hosted runner admin/sudo access does not guarantee these backends can run**. Do an early feasibility spike per OS; use appropriately secured self-hosted runners if required.
 - Jobs run in separate, isolated machines; they do not automatically share a LAN. Mixed-OS tests require a reachable WireGuard test endpoint or explicitly orchestrated runner infrastructure. A CI test peer is **not** a Peerimeter relay or product component. Avoid exposing secrets or long-lived keys in logs; use ephemeral per-run keys and protected test credentials. Do not give untrusted pull-request code access to private network test resources.
-- Maintain a status matrix for each OS and gate: **passed / failed / blocked / not run**, runner image, backend, tested commit SHA, log/artifact reference, and test date in `progress.md`. Never silently skip a required test or mark an unavailable environment as passing. An unmet native test is a blocker to claiming verified platform support, even if development can proceed.
+- Maintain a status matrix for each OS and gate: **passed / failed / blocked / not run**, runner image, backend, tested commit SHA, log/artifact reference, and test date in `docs/planning/progress.md`. Never silently skip a required test or mark an unavailable environment as passing. An unmet native test is a blocker to claiming verified platform support, even if development can proceed.
 - Keep `connectivity-e2e.yml` explicitly blocked until a real topology exists; do not count a blocked placeholder as a passing connectivity test. Mixed-OS connectivity, NAT/IP-change and disruption recovery remain later acceptance work.
 - `peerimeter-service` gets an **independent** GitHub Actions CI when its repository is initialized (Go API unit/integration tests, Postgres and MQTT where needed, web build, auth and contract tests). Do not couple service CI to the agent repository source tree.
 
@@ -686,14 +689,23 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 - [x] Separate Unix configuration/keys, persistent state and runtime resources using the platform defaults and `--config-dir`/`--state-dir`/`--runtime-dir` rules above; safely migrate the initial combined layout and natively verify service/CLI access, permissions and lifecycle with default/custom paths.
 - [x] Implement complete `peerimeter-agent uninstall` with a read-only `--dry-run`, safe shutdown, service/boot-registration removal and deletion of all installation-owned configuration, keys, state, lock/socket/PID files and program files; natively verify default/custom paths, retry/idempotency and protection of unrelated resources on all three OSes.
 - [x] Bundle the official signed WireGuardNT component with the Windows-agent installer and provision its driver with administrator privileges, without a separate WireGuard application or download; verify offline installation and real tunnel connectivity on a clean Windows runner.
-- [x] Provide `install.sh` for Linux/macOS and `install.ps1` for Windows to install the latest stable published agent release by default. Detect OS/architecture automatically, with documented platform defaults for the installation directory. Support an explicit release version and installation directory: `install.sh --version <tag|latest> --install-dir <path>` and `install.ps1 -Version <tag|latest> -InstallDir <path>`. Resolve `latest` to one concrete release before downloading; install matching release artifacts without requiring Go or a source checkout. Verify artifact integrity/authenticity before installation, handle required privileges clearly, preserve existing protected keys/configuration, and keep the Windows WireGuardNT component bundled with the installation package. Verify default/latest installation, pinned-version installation and custom paths (including spaces) natively on all three OSes; fail clearly for unavailable releases, unsupported architectures or unwritable destinations. These are operator-invoked installers; automatic self-update remains Phase 7.
+- [x] Provide `install.sh` for Linux/macOS and `install.ps1` for Windows to install the latest stable published agent release by default. Detect OS/architecture automatically, with documented platform defaults for the installation directory. Support an explicit release version and installation directory: `install.sh --version <tag|latest> --install-dir <path>` and `install.ps1 -Version <tag|latest> -InstallDir <path>`. Resolve `latest` to one concrete release before downloading; install matching release artifacts without requiring Go or a source checkout. Verify artifact integrity/authenticity before installation, handle required privileges clearly, preserve existing protected keys/configuration, and keep the Windows WireGuardNT component bundled with the installation package. Verify default/latest installation, pinned-version installation and custom paths (including spaces) natively on all three OSes; fail clearly for unavailable releases, unsupported architectures or unwritable destinations. These are operator-invoked installers; automatic self-update is Phase 2.
 - [x] Reformat the agent README for clearer presentation and navigation: concise project/status introduction, platform support table, quick start, copyable Linux/macOS shell and Windows PowerShell installation examples (latest, explicit version and custom destination), configuration/key permissions, CLI/service usage, testing and current limitations. Use consistent headings, spacing and code blocks; describe only functionality actually verified at that milestone.
 - [x] Run platform-specific privileged WireGuard integration jobs on **each** OS (hosted if supported; otherwise secured self-hosted); demonstrate actual interface creation, handshake, bidirectional tunnel traffic, restart, teardown and config-error behavior.
 - [x] Do not attempt control-plane calls in static mode; direct endpoints must already be supplied in JSON.
 
 **Done when:** at least two agents with static JSON configs can exchange traffic via real direct WireGuard connections on Linux, macOS and Windows, with reproducible OS-specific test instructions/results (or explicitly documented unmet verification if runners aren't available). **Do not declare Phase 1 complete from cross-compilation only.**
 
-### Phase 2 — `peerimeter-service` repository, control plane, enrollment bundle and config sync
+### Phase 2 — Agent self-update
+- [x] Provide the explicit `peerimeter-agent self-update` command with an interactive confirmation that shows current and latest versions; `--yes` skips confirmation for automation.
+- [x] Check the latest stable release, fetch the OS/architecture package and verify its SHA256SUMS entry over HTTPS. The checksum manifest uses the HTTPS release trust channel; do not describe it as a detached signature.
+- [x] Use the installation inventory to replace only owned program files. Preserve data, documentation, lock and profile directories; leave independently managed Windows WireGuardNT files unchanged.
+- [x] Journal multi-file replacement, roll back on failed binary/service readiness, and recover interrupted updates on supported platforms.
+- [x] Add unit, integration and installed-binary E2E coverage; pass native build/test, WireGuard integration and package checks on Linux, macOS and Windows, with independent review.
+
+**Done when:** the operator can explicitly update the installed agent, unsafe or mismatched packages are refused, failed readiness restores the previous installation, and native platform CI verifies the update and recovery paths. See [progress.md](progress.md) and agent PRs [#37](https://github.com/peerimeter/peerimeter-agent/pull/37), [#38](https://github.com/peerimeter/peerimeter-agent/pull/38), and [#39](https://github.com/peerimeter/peerimeter-agent/pull/39).
+
+### Phase 3 — `peerimeter-service` repository, control plane, enrollment bundle and config sync
 - [ ] Add Go server REST API, PostgreSQL migrations, network/peer registry and authoritative revisions.
 - [ ] Generate one-time or short-lived enrollment credentials and versioned **Base64URL(JSON)** join bundles containing `api_url` and `enrollment_token`.
 - [ ] `peerimeter-agent join --token <bundle>` decodes, validates URL/expiry as applicable, exchanges enrollment secret for device credentials and downloads initial managed configuration; never requires separate `--server`.
@@ -704,7 +716,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 
 **Done when:** agents can be onboarded with one join bundle (no server argument), automatically reconcile managed configuration and peer DNS host mappings to WireGuard tunnel addresses, while static JSON agents still operate independently.
 
-### Phase 3 — STUN, direct NAT traversal, self-healing (critical path)
+### Phase 4 — STUN, direct NAT traversal, self-healing (critical path)
 - [ ] Validate STUN socket mapping versus actual WG source port on every relevant backend.
 - [ ] Discover each agent's LAN/private-underlay addresses separately from its WireGuard tunnel addresses; exchange and select reachable same-LAN addresses as direct peer endpoints, with tests proving same-network peers use their internal addresses when available.
 - [ ] Implement public/relay candidate discovery and exchange, dynamic endpoint updates, network events, health probes and recoverable state machine.
@@ -713,41 +725,29 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 
 **Done when:** same-LAN peers can discover and use reachable internal endpoints, and documented public-IP/port-change scenarios recover autonomously where direct connectivity is feasible.
 
-### Phase 4 — Browser dashboard and GitHub SSO
+### Phase 5 — Browser dashboard and GitHub SSO
 - [ ] React/TypeScript dashboard with OAuth, network management, enrollment-token generation and peer graph.
 - [ ] Show actual connection observations and diagnostics, not fabricated live status.
 - [ ] Embed production frontend assets in Go server.
 
 **Done when:** user can administer networks and create join bundles through the browser.
 
-### Phase 5 — External WireGuard clients via Linux gateway
+### Phase 6 — External WireGuard clients via Linux gateway
 - [ ] Gateway external WG interface, separate address pool and client registration/revocation.
 - [ ] Linux forwarding, firewall and SNAT with explicit destination allowlists.
 - [ ] Standard WG config and optional QR export, with security/E2E tests.
 
 **Done when:** stock WireGuard clients can access only approved mesh destinations through a Linux gateway.
 
-### Phase 6 — Cross-platform resilience and packaging
+### Phase 7 — Cross-platform resilience and packaging
 - [ ] Expand native macOS/Windows service/installer tests and real network-change coverage.
 - [ ] Test mixed-OS meshes, crash/reboot recovery, upgrade/rollback and protected local storage.
 - [ ] Fix platform differences discovered since Phase 1; do **not** postpone basic macOS/Windows connectivity to this phase.
 
 **Done when:** all three OSes have validated managed mode and documented lifecycle/recovery behavior.
 
-### Phase 7 — Release hardening
+### Phase 8 — Release hardening
 - [ ] Audit enrollment, configuration handling, authorization and gateway policies.
-- [ ] Implement agent self-update on Linux, macOS and Windows: explicit operator
-  invocation, OS/architecture compatibility checks, strict SHA256SUMS package-
-  integrity verification over HTTPS, per-file atomic replacement, coordinated
-  service restart and rollback on failed readiness. The checksum manifest shares
-  the HTTPS release trust channel; do not describe it as a detached signature.
-  Preserve protected keys, configuration, interface identity, inventory-selected
-  directories and offline static mode; verify successful updates, rejected
-  invalid packages and recovery from interrupted or failed updates natively on
-  all three OSes. Windows must retain the bundled WireGuardNT hash and Authenticode
-  checks and replace a locked agent executable through a helper. This Phase 7
-  work has been brought forward for implementation; it is not complete until
-  native validation and independent review pass.
 - [ ] Document diagnostics, operating limits, installation, security model and NAT restrictions.
 - [ ] Repeat performance, E2E and failure recovery tests; publish supported-platform matrix.
 
@@ -755,7 +755,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 
 ## 16. Immediate implementation assignment (start here)
 
-**First Codex run (workspace root, agent repo first):** Read **both** `plan.md` and `additional-plan.md`, create/update `progress.md`, implement Phase 0 and begin Phase 1. **Do not start server/API/MQTT/STUN/dashboard or enrollment until offline cross-platform static mode is implemented and tested as far as the available OS runners permit.**
+**Historical first-run assignment:** Read **both** `plan.md` and `additional-plan.md`, update `docs/planning/progress.md`, implement Phase 0 and begin Phase 1. **Do not start server/API/MQTT/STUN/dashboard or enrollment until offline cross-platform static mode is implemented and tested as far as the available OS runners permit.** Current phase status is in `docs/planning/progress.md`.
 
 Deliverables:
 1. Versioned `peerimeter.static.json` schema, example configs and validation.
@@ -764,7 +764,7 @@ Deliverables:
 4. Linux default safe `pm-$networkName` and `--interface` override in offline and later managed mode.
 5. Required GitHub Actions workflows (`pipeline.yml` and `connectivity-e2e.yml`), with a native OS matrix, real WG connectivity tests and clearly documented topology blockers.
 6. Service management and local status/`wg show` reporting with no network API requirement.
-7. `progress.md` updated with **actual**, not assumed, verification results.
+7. `docs/planning/progress.md` updated with **actual**, not assumed, verification results.
 
 ```bash
 go test ./...
@@ -796,10 +796,11 @@ Update this section whenever a phase is finished or an important design constrai
 | Phase | Status | Notes |
 |---|---|---|
 | 0 — Baseline | Complete | Native Go 1.27.4 baseline and backend feasibility verified on all three; operational tunnel/IPC commands belong to Phase 1 |
-| 1 — Offline WG on Linux/macOS/Windows | Complete (core) | Native agent/service/installer scope passed independent review; post-phase CLI/output updates are locally verified, with fresh native CI pending; STUN add-on verification remains pending |
-| 2 — Server + sync | Not started | |
-| 3 — NAT + self-healing | Not started | |
-| 4 — Web dashboard | Not started | |
-| 5 — External gateway | Not started | |
-| 6 — Cross-platform resilience | Not started | |
-| 7 — Release | Not started | |
+| 1 — Offline WG on Linux/macOS/Windows | Complete (core) | Native agent/service/installer scope passed independent review; latest build/test and integration CI passed; STUN add-on verification remains pending |
+| 2 — Agent self-update | Complete | Native updater build/test, installed-binary E2E, integration, package and review gates passed in agent PRs #37–#39 |
+| 3 — Server + sync | Not started | |
+| 4 — NAT + self-healing | Not started | |
+| 5 — Web dashboard | Not started | |
+| 6 — External gateway | Not started | |
+| 7 — Cross-platform resilience | Not started | |
+| 8 — Release hardening | Not started | |

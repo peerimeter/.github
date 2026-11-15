@@ -4,10 +4,17 @@
 
 ## Current status
 
-- **Active phase:** ✅ Phase 1 complete; ⬜ Phase 2 not started
-- **Last verified milestone:** Native offline agent, service/IPC, installers, packages and independent review verified for Phase 1 (2026-11-11); exact commits/runs below.
-- **Repositories:** `peerimeter-agent` (P0/P1, first); `peerimeter-service` (Phase 2 onward). Two independent Git repositories.
-- **Next action:** Choose the first published agent release or begin Phase 2 when requested. No service/control-plane work has started.
+- **Active work:** ✅ Phase 0 complete; ✅ Phase 1 complete; ✅ Phase 2 agent self-update complete; ⬜ Phase 3 service/control plane not started.
+- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. PR #37, #38 and #39 are merged; exact commits and run links are recorded below.
+- **Repositories:** `peerimeter-agent` (Phases 0–2, complete); `peerimeter-service` (Phase 3 onward, not started). Two independent Git repositories.
+- **Next action:** Verify the published v0.17.0 installation path when requested, then begin Phase 3 only when requested. No service/control-plane work has started.
+
+The phase numbering below supersedes historical entries: agent self-update is now
+Phase 2, and the former control-plane through release-hardening phases move to
+Phases 3–8. Older dated logs retain their original phase numbers for history.
+The former agent-root `progress.md` is being consolidated into this shared
+tracker; current agent documentation links here rather than maintaining a
+duplicate progress file.
 
 ## Phase checklist
 
@@ -18,17 +25,18 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 |---|---|---|
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/`wg show` belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
-| 2 — Server + join bundles + sync | ⬜ Not started | Includes managed peer host-file entries with configurable `$hostName.$networkName` naming |
-| 3 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
-| 4 — Browser dashboard + GitHub SSO | ⬜ Not started | |
-| 5 — External WireGuard client gateway | ⬜ Not started | |
-| 6 — Cross-platform resilience + packaging | ⬜ Not started | |
-| 7 — Release and hardening | ⬜ Not started | |
+| 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
+| 3 — Server + join bundles + sync | ⬜ Not started | Includes managed peer host-file entries with configurable `$hostName.$networkName` naming |
+| 4 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
+| 5 — Browser dashboard + GitHub SSO | ⬜ Not started | |
+| 6 — External WireGuard client gateway | ⬜ Not started | |
+| 7 — Cross-platform resilience + packaging | ⬜ Not started | |
+| 8 — Release and hardening | ⬜ Not started | |
 
 ## Two-repository checklist
 
 - [x] `peerimeter-agent` initialized with independent `.git`, `go.mod`, and CI.
-- [ ] `peerimeter-service` initialized separately at Phase 2 with independent `.git`, `go.mod`, and CI.
+- [ ] `peerimeter-service` initialized separately at Phase 3 with independent `.git`, `go.mod`, and CI.
 - [ ] Cross-repo versioned HTTP/JSON and MQTT contracts defined and tested without relative module imports.
 - [ ] Record tested commit hash and status for each repository.
 
@@ -47,19 +55,19 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - [x] `peerimeter-agent/.github/workflows/connectivity-e2e.yml` exists as a manual entry point and reports a blocked result until a mixed-OS/NAT topology is provisioned; no connectivity pass is claimed.
 - [x] macOS/Windows GitHub-hosted tunnel feasibility checked: both passed on the exact target images; no self-hosted fallback currently needed.
 - [x] All integration skips and missing infrastructure are reported explicitly, never as a pass; agent E2E remains unavailable and manual E2E workflow fails with a blocked explanation.
-- [ ] `peerimeter-service` independent CI added at Phase 2.
+- [ ] `peerimeter-service` independent CI added at Phase 3.
 
 ## Additional requirements checklist
 
-- [ ] Phase 2: managed host-file DNS entries from peer names/network names using a configurable template and maintained Go hosts-file library; entries must map to the peer's WireGuard tunnel address(es), preserve unrelated content and reconcile lifecycle changes cross-platform.
-- [ ] Phase 3: separately discover/exchange same-LAN agents' internal/private-underlay addresses and use reachable ones as peer endpoints; this is distinct from host-file DNS entries, which resolve names to WireGuard tunnel addresses.
+- [ ] Phase 3: managed host-file DNS entries from peer names/network names using a configurable template and maintained Go hosts-file library; entries must map to the peer's WireGuard tunnel address(es), preserve unrelated content and reconcile lifecycle changes cross-platform.
+- [ ] Phase 4: separately discover/exchange same-LAN agents' internal/private-underlay addresses and use reachable ones as peer endpoints; this is distinct from host-file DNS entries, which resolve names to WireGuard tunnel addresses.
 
 - [x] P0 static JSON schema versioning, validation and protected local key references.
 - [x] `peerimeter-agent run --config <path>` makes no API/MQTT/STUN calls.
 - [x] Real WireGuard connectivity from static configs on Linux, macOS and Windows, each natively verified.
 - [x] systemd, launchd and Windows Service lifecycle with local offline `status` and `wg show`.
 - [ ] Static config remains usable after online enrollment is added.
-- [ ] Phase 2 join bundle is Base64URL(unpadded JSON with `version`, `api_url`, `enrollment_token`).
+- [ ] Phase 3 join bundle is Base64URL(unpadded JSON with `version`, `api_url`, `enrollment_token`).
 - [ ] `join --token <bundle>` derives server URL from token; `--token-file` supported.
 - [ ] Validate HTTPS URL, credential expiry/replay, secrets and error/log redaction.
 
@@ -74,15 +82,15 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
-| `peerimeter-agent` | `4246c6bea040bfa41a0bd506f0df501310a20367` (unit/packages/review); `04648b9` (actual agent integration, same runtime source) | 🔄 Phase 1 in progress | Native unit, actual agent/service integration and installers passed on all three OSes; independent review passed |
-| `peerimeter-service` | None | Not started; wait for agent milestone | Not run |
+| `peerimeter-agent` | `8a6fb0d` (progress UX merged); `1f7a1fc` (confirmation and native updater CI); `091bd40` (accepted Phase 1) | ✅ Phase 2 complete | Native build/tests, installed-binary E2E, WireGuard integration, all package targets and CodeRabbit review passed |
+| `peerimeter-service` | None | Not started; Phase 3 begins when requested | Not run |
 
 ## Completed work
 
-- Created [peerimeter-agent](https://github.com/peerimeter/peerimeter-agent) as an independent repository. No service code/repository created ahead of Phase 2.
+- Created [peerimeter-agent](https://github.com/peerimeter/peerimeter-agent) as an independent repository. No service code/repository created ahead of Phase 3.
 - Implemented versioned strict static JSON parsing/validation, two public templates, secure fresh example generation, private key handling, Linux naming/ownership helpers, platform interfaces and foreground cleanup lifecycle tests.
 - Functional `run`, local `status`/`wg show`, safe `sync`/`stop`, protected operator IPC, and native service lifecycle are implemented and tested. Cobra owns CLI parsing/help/completion. The package workflow builds release archives and verifies installers.
-- Go **1.27.4** is required in the plan, modules and native CI. Agent self-update remains Phase 7 scope, brought forward for implementation.
+- Go **1.27.4** is required in the plan, modules and native CI. Agent self-update is complete as Phase 2.
 - Backend feasibility uses real official WireGuard implementations, independent of the unfinished agent.
 
 
@@ -104,25 +112,27 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
   Windows each use an actual native agent against an independent userspace peer.
 - Linux amd64, macOS arm64 and Windows amd64 are natively verified. Linux arm64,
   macOS amd64 and Windows arm64 packages cross-build; their runtime is unverified.
-- No public GitHub release has been published. Latest/pinned URL resolution uses
-  explicit fixtures in native installer tests; real packaged binaries are also
-  installed and executed. Live default downloads require publishing a release.
+- Agent release [v0.17.0](https://github.com/peerimeter/peerimeter-agent/releases/tag/v0.17.0)
+  was published on 2026-11-15 with Linux/macOS/Windows packages and SHA256SUMS.
+  Latest/pinned URL resolution also uses explicit fixtures in native installer
+  tests; real packaged binaries are installed and executed.
 - One named native system service is currently supported per machine. Changing
-  macOS/Windows interface addresses requires explicit stop/start. No self-updater
-  exists yet (Phase 7). The service repository remains unstarted.
+  macOS/Windows interface addresses requires explicit stop/start. Self-update
+  is complete; the service repository and Phase 3 control-plane work remain
+  unstarted.
 
 ## Architectural decisions
 
 - No relay and no desktop UI.
 - Separate `peerimeter-agent` and `peerimeter-service` Git repositories; no monorepo.
-- Cross-platform static JSON WireGuard agent is P0; API is optional until Phase 2.
+- Cross-platform static JSON WireGuard agent is P0; API is optional until Phase 3.
 - Managed join bundle includes both HTTPS API URL and opaque enrollment token; Base64URL is not encryption.
 - Linux interface naming is local to each enrolled agent/network; see `additional-plan.md`.
 
 ## Next steps
 
-1. Publish a first agent release when requested so live `latest` installation is available.
-2. Begin Phase 2 control-plane/API/enrollment work only when requested; retain the offline agent contract.
+1. Verify the published v0.17.0 installation path when requested.
+2. Begin Phase 3 control-plane/API/enrollment work only when requested; retain the offline agent contract.
 3. Add reachable mixed-OS VM tests and later NAT/disruption recovery tests without treating cross-builds as runtime proof.
 
 ## Session log — 2026-11-11
@@ -174,7 +184,7 @@ Native verification of the migration is pending.
 - [Packages/installers](https://github.com/peerimeter/peerimeter-agent/actions/runs/42948951604): all six OS/architecture artifacts built at `4246c6b`; native Linux/macOS/Windows installer checks passed. Actual Unix archive installation and installed binary version/toolchain verified; actual Windows ZIP includes signed pinned WireGuardNT with no separate GUI/MSI. Tests cover latest/pinned URL fixtures, offline archives, custom/spaced paths, invalid checksums, preservation and Windows rollback. No public release was published.
 - `4246c6b` differs from `04648b9` only by the extra Unix actual-package test step; runtime sources are identical. Runner images: Ubuntu 24.04 x64 `20261101.360.1`; macOS 15 arm64 `20261104.0514.1`; Windows 2022 x64 `20261101.353.1` (recorded in evidence artifacts).
 - Independent reviewer `/root/phase1_review` **passed** final code at `4246c6bea040bfa41a0bd506f0df501310a20367`. Parent model was inherited; concrete model identifier unavailable. No blocking findings remain. Four findings fixed and rechecked: failed install retry/reinstall, delegated nonadmin IPC, Cobra/service script arguments, and concurrent installer snapshot rollback. The latter has a barrier-controlled regression test that failed before the lock fix and passed afterward. Review is independent of platform implementation agents.
-- Prior failures are preserved in agent progress.md: Linux alias initialization, Windows FILE_ADD_* constants, SYSTEM metadata cleanup ACLs, stale service script flags and Python Windows UTF-8 decoding; all resolved in the successful runs above.
+- Historical agent failures recorded in its former progress tracker included Linux alias initialization, Windows FILE_ADD_* constants, SYSTEM metadata cleanup ACLs, stale service script flags and Python Windows UTF-8 decoding; all were resolved in the successful runs above.
 - ✅ Phase 0 complete; 🔄 Phase 1 in progress; ⬜ Phase 2 not started. Historical “Phase 1 pending” entries above are superseded by this dated completion record.
 
 ## 🔄 Phase 1 scope extension — plan commit a022780
@@ -278,10 +288,10 @@ validation, and socket cleanup. Diagnostic local and cross-platform builds pass;
 review, native per-OS verification and live STUN behavior remain pending.
 
 
-## Planned Phase 2 requirement — one agent, multiple networks (2026-11-13)
+## Planned Phase 3 requirement — one agent, multiple networks (renumbered 2026-11-15)
 
 Expanded the earlier A1 interface-naming requirement into explicit concurrent
-multi-network management by one agent service. Phase 2 now includes independent
+multi-network management by one agent service. Phase 3 includes independent
 network state/lifecycle, CLI selection/overview, conflict validation and two-network
 native acceptance tests; details are in additional-plan.md A12. This is planned
 work and does not claim that multi-network service management is implemented.
@@ -291,7 +301,7 @@ work and does not claim that multi-network service management is implemented.
 Reviewed the current sibling `peerimeter-agent` tree at implementation commit
 `0c258558099a3fe1258806d9819806b2c66023e6` (with later documentation/CI-name
 commits at `360a42e`). The accepted Phase 1 core remains complete; managed
-enrollment, MQTT sync and multi-network commands remain Phase 2 work.
+enrollment, MQTT sync and multi-network commands remain Phase 3 work.
 
 Since the original Phase 1 acceptance, the CLI gained a live `status --watch`
 view with an interval option and JSON-lines snapshots, responsive terminal
@@ -311,19 +321,39 @@ historical SHAs and must not be read as verification of `0c25855`.
 
 ## Self-update implementation — 2026-11-15
 
-The user moved the Phase 7 self-update work forward. Implementation is in
-progress on `peerimeter-agent` branch `feat/agent-self-update`; it is not merged
-or independently reviewed yet. The current working tree adds explicit `update`,
-strict HTTPS `SHA256SUMS` package verification, inventory-selected program-file
-replacement, journaled rollback/recovery, service stop/start/readiness handling,
-and a Windows helper that leaves the pinned WireGuardNT DLL unchanged. The
-README states that SHA256SUMS shares the HTTPS release trust channel and does
-not claim detached signatures. It also records that Windows completion is
-asynchronous and recovery is operator-triggered.
+The user moved agent self-update forward to Phase 2. The feature is complete and
+merged in [agent PR #37](https://github.com/peerimeter/peerimeter-agent/pull/37),
+[PR #38](https://github.com/peerimeter/peerimeter-agent/pull/38) and
+[PR #39](https://github.com/peerimeter/peerimeter-agent/pull/39). The engine
+uses the installation inventory to select program files, verifies release
+packages against SHA256SUMS over HTTPS, journals replacement and can restore the
+previous installation after failed readiness or interruption. It preserves
+installation data and profile directories and leaves the independently managed
+Windows WireGuardNT DLL unchanged. SHA256SUMS shares the HTTPS release trust
+channel; it is not a detached signature.
 
-Local validation on Go 1.27.3 ARM64 with `CGO_ENABLED=0` passed `make test`,
-`make lint`, and `make build`; Linux/ARM64 native build plus Windows/AMD64 and
-macOS/ARM64 cross-builds passed. Changed Windows test packages compiled with
-`go test -c`. These results do not replace native update execution: Linux,
-macOS, Windows, failed-readiness rollback, and interrupted-update recovery still
-need native CI and independent review. Phase 7 is not complete.
+PR #37 merged at `7e3cb8b80587a123097b272c1c81989097a5841e` with native updater
+integration. PR #38 merged at `2b4fac8891bf4320f24a8b79a75eab24bd4ea0de` with
+interactive confirmation, `--yes`, the `self-update` command name and its
+release-check E2E endpoint fix. Its native run
+[`43735889325`](https://github.com/peerimeter/peerimeter-agent/actions/runs/43735889325)
+passed build/tests, installed-binary E2E, WireGuard integration and all six
+package targets on Linux, macOS and Windows. CodeRabbit reported no actionable
+comments after the endpoint fix.
+
+PR #39 merged at `8a6fb0d151e728c3ce9abace0413371271d4005e`, adding progress
+reporting for release lookup, package download/verification, replacement,
+service readiness and rollback. Its native run
+[`43745890445`](https://github.com/peerimeter/peerimeter-agent/actions/runs/43745890445)
+passed all platform build/test and WireGuard integration jobs, all six package
+targets, the action-lock gate and aggregate `check`; CodeRabbit reported no
+actionable comments. On a TTY the command animates the current operation on
+stderr; with redirected output it prints step start/completion lines. JSON
+results remain on stdout.
+
+Local Go 1.27.3 ARM64 validation with `CGO_ENABLED=0` passed the updater
+integration tests, `go test ./...`, `go vet ./...` and a production build. The
+installed-binary E2E test runs in native CI with its opt-in environment enabled;
+it skips by default in a local `go test ./...` invocation. These results do not
+provide mixed-OS/NAT connectivity evidence or constitute a public release; those
+remain outside the completed self-update scope.
