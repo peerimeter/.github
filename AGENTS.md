@@ -14,7 +14,7 @@ This is the independent `peerimeter/.github` repository. It contains the Peerime
 
 ## Working agreements
 
-- Keep planning claims aligned with the agent's `README.md`, `progress.md`, implementation, and actual CI evidence. Distinguish implemented features, planned features, and unverified network scenarios.
+- Keep planning claims aligned with `peerimeter-agent/README.md`, its current implementation, `docs/planning/progress.md`, and actual CI evidence. The shared tracker is in this repository; do not expect an agent-root `progress.md`. Distinguish implemented features, planned features, and unverified network scenarios.
 - Preserve the two-repository separation. Make changes and commits in the affected repository only; do not treat sibling changes as one atomic commit.
 - Peerimeter uses direct WireGuard connections without a relay. Do not claim STUN alone guarantees NAT traversal.
 - Follow the shared [repository conventions](docs/repository-conventions.md) for secrets, commits, branches, pull requests, checks and completion claims.
