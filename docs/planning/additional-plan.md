@@ -1,6 +1,6 @@
 # Peerimeter — Additional Implementation Requirements
 
-> Read **both `plan.md` and this file** before implementing any phase. This file supplements `plan.md`; when this file provides a more specific requirement, follow it. Preserve all original non-goals: **no relay, no desktop UI**. Track actual implementation status in `progress.md`.
+> Read **both `plan.md` and this file** before implementing any phase. This file supplements `plan.md`; when this file provides a more specific requirement, follow it. Preserve all original non-goals: **no relay, no desktop UI**. Track actual implementation status in `docs/planning/progress.md` in the `.github` repository.
 
 ## A1. Configurable Linux WireGuard interface name
 
@@ -90,7 +90,7 @@ Status: connected
 
 ## A2. Codex progress tracking (`progress.md`)
 
-Codex must create `progress.md` in the repository root at the start of the first implementation session if it does not exist. If it already exists, preserve and update it; **do not overwrite previous work logs**.
+Codex must maintain the shared tracker at `docs/planning/progress.md` in the `.github` repository. If it already exists, preserve and update it; **do not overwrite previous work logs**. Do not create a duplicate tracker in `peerimeter-agent`.
 
 Minimum structure:
 
@@ -101,7 +101,7 @@ Minimum structure:
 5. Known bugs, limitations, blockers, and next actions.
 6. Important architectural decisions, including the interface naming algorithm and its persistence format.
 
-Update `progress.md` after each coherent task and at the end of every Codex session. Keep the phase checklist in `plan.md` consistent if that file also contains progress markers, but treat `progress.md` as the primary running log. Do not erase historical test failures; record when they were resolved.
+Update `docs/planning/progress.md` after each coherent task and at the end of every Codex session. Keep the phase checklist in `plan.md` consistent if that file also contains progress markers, but treat the shared tracker as the primary running log. Do not erase historical test failures; record when they were resolved.
 
 ## A3. Development ordering
 
@@ -177,7 +177,7 @@ peerimeter-agent run --config ./peerimeter.static.json --interface wg-prod
 
 ## A5. Later managed enrollment: one Base64URL(JSON) join token, including API URL
 
-When Phase 2 introduces server enrollment, **the user must not have to specify `--server` separately**. The server (and later browser dashboard) generates a portable join token that packages an absolute HTTPS API URL and an opaque, short-lived/one-time enrollment secret.
+When Phase 3 introduces server enrollment, **the user must not have to specify `--server` separately**. The server (and later browser dashboard) generates a portable join token that packages an absolute HTTPS API URL and an opaque, short-lived/one-time enrollment secret.
 
 **Token wire format:** `base64url_no_padding(utf8(JSON))`, with strict schema validation and a version discriminator.
 
@@ -217,14 +217,15 @@ Acceptance criteria:
 
 1. **Phase 0:** cross-platform project baseline, versioned static JSON model, functional offline config validation, CLI command/argument contracts, and testable lifecycle/adapter interfaces. Native build/unit/CLI validation and early backend feasibility checks belong here. Runtime-dependent CLI commands must explicitly report unavailable until Phase 1; operational tunnels and local status/`wg show` are not Phase 0 completion gates.
 2. **Phase 1:** actual Linux, macOS and Windows static WireGuard agents and services (API-free), including operational `run --config`, local `status` and `wg show`, authenticated local IPC or real local WireGuard state, with native verification. This implements the runtime behind the Phase 0 CLI contracts.
-3. **Phase 2:** central API, PostgreSQL, join bundles (`api_url` + `enrollment_token`), MQTT and online config provider, reusing static mode's reconciler.
-4. **Phase 3:** STUN, direct NAT traversal, dynamic IP recovery/self-healing.
-5. **Phase 4:** browser dashboard and GitHub SSO.
-6. **Phase 5:** external WireGuard gateway/client support.
-7. **Phase 6:** resilience, additional native integration, packages.
-8. **Phase 7:** hardening and release.
+3. **Phase 2:** inventory-aware agent self-update, including confirmation, SHA256SUMS verification, rollback/recovery and native platform tests.
+4. **Phase 3:** central API, PostgreSQL, join bundles (`api_url` + `enrollment_token`), MQTT and online config provider, reusing static mode's reconciler.
+5. **Phase 4:** STUN, direct NAT traversal, dynamic IP recovery/self-healing.
+6. **Phase 5:** browser dashboard and GitHub SSO.
+7. **Phase 6:** external WireGuard gateway/client support.
+8. **Phase 7:** resilience, additional native integration, packages.
+9. **Phase 8:** hardening and release.
 
-**Codex must read `plan.md`, `additional-plan.md` and `progress.md` before coding; create `progress.md` if missing and update it after each coherent implementation task.** Reconcile any conflicting old wording (e.g. “Linux first”, Phase 6 cross-platform) in favor of A4–A6. Do not start server/dashboard work until Phase 1 cross-platform static-mode requirements have been implemented to the extent test infrastructure permits, with remaining native verification clearly recorded as blockers.
+**Codex must read `plan.md`, `additional-plan.md` and `docs/planning/progress.md` before coding; preserve and update the shared tracker after each coherent implementation task.** Reconcile any conflicting old wording (e.g. “Linux first”, Phase 6 cross-platform) in favor of A4–A6. Do not start server/dashboard work until Phase 1 cross-platform static-mode requirements have been implemented to the extent test infrastructure permits, with remaining native verification clearly recorded as blockers.
 
 
 ## A7. Mandatory repository separation (new requirement)
@@ -234,7 +235,7 @@ Acceptance criteria:
 - `peerimeter-service` contains the central REST API, PostgreSQL, MQTT coordination, browser dashboard, GitHub SSO and management of external-client gateways. No desktop application, no relay.
 - **Build and verify the offline agent in `peerimeter-agent` before starting the implementation in `peerimeter-service`.**
 - Use versioned, documented HTTP/JSON and MQTT contracts at the repository boundary; the service is the schema owner, while the agent pins compatible contracts/releases. Avoid long-term relative Go module replacements, importing another repository's `internal` packages, or duplicating business logic across repositories.
-- Keep builds, CI, testing, commits, tags and releases independent; record progress for **each repo** in `progress.md`.
+- Keep builds, CI, testing, commits, tags and releases independent; record progress for **each repo** in `docs/planning/progress.md`.
 - A local workspace may contain both sibling directories and the planning Markdown files; it is *not* a third Git repository.
 - `pm-` is the Linux default interface prefix everywhere. Use this prefix consistently in documentation, defaults, examples, and tests.
 
@@ -249,7 +250,7 @@ GitHub Actions is required **from Phase 0**, within `peerimeter-agent` (not in a
 
 Secure CI: use temporary WireGuard keys, least-privilege GitHub token permissions, bounded timeouts and teardown; keep secrets out of logs/artifacts. Do not expose a privileged private test network to untrusted pull requests. `peerimeter-service` later receives its own independent API/web GitHub Actions workflows.
 
-**Update `progress.md` after each CI run and milestone with the per-platform matrix and links to results; keep Phase 0 focused on the offline agent rather than building an API to make CI pass.**
+**Update `docs/planning/progress.md` after each CI run and milestone with the per-platform matrix and links to results; keep Phase 0 focused on the offline agent rather than building an API to make CI pass.**
 
 ## A9. Mandatory phase-end independent review
 
@@ -259,7 +260,7 @@ The reviewer must not be the author of the reviewed changes. It may use a differ
 model if available; report the actual reviewer/model and reviewed code SHA.
 Resolve blocking findings, rerun affected tests and obtain follow-up verification.
 Record findings, fixes, evidence, deferred non-blocking items and the final review
-outcome in progress.md. Independent review supplements native tests and never
+outcome in `docs/planning/progress.md`. Independent review supplements native tests and never
 substitutes for real tunnel/traffic verification. A phase with open correctness,
 security or acceptance blockers remains in progress.
 
@@ -295,10 +296,10 @@ example main/flag/log.Fatal structure or introduce a second CLI parser.
   focused renderer tests, plain/color/JSON CLI tests and native integration
   assertions against real backend state. Automation must opt into `wg --json`
   or `wg show --json` when parsing peer data. Completion requires implementation,
-  native verification and independent review; see progress.md for evidence.
+  native verification and independent review; see `docs/planning/progress.md` for evidence.
 
 
-## A12. Phase 2 — Multiple networks in one agent service
+## A12. Phase 3 — Multiple networks in one agent service
 
 A1 already requires joining multiple networks without interface-name collisions.
 Expand that into a complete managed-mode requirement: **one installed agent service
