@@ -222,7 +222,7 @@ peerimeter-agent completion bash|zsh|fish|powershell
 ```
 
 - Global output flags include `--json`, `--color auto|always|never`, and `--debug`; `version` and all command responses must remain safe for automation and redact secrets.
-- A bare invocation prints version and help, then checks for updates; `--help` never makes a network request. `check-update --json` reports `update_command: "peerimeter-agent update"` when an upgrade is available. Self-update is explicit and uses inventoried program files only.
+- A bare invocation prints version and help, then checks for updates; `--help` never makes a network request. `check-update --json` reports `update_command: "peerimeter-agent self-update"` when an upgrade is available. Self-update is explicit and uses inventoried program files only.
 - `status --watch` refreshes a live terminal view; `--interval` is valid only with `--watch`. In JSON mode it emits newline-delimited snapshots until interrupted.
 - `wg` and `wg show` show the traditional WireGuard peer view. `wg --json` and `wg show --json` return the public peer array. `status --json` returns the local status snapshot. There is no separate `peers` CLI command in the current implementation.
 - `stun` is a diagnostic UDP mapping probe only. It accepts an optional local port and `--server`; absent `--server`, it tries the configured Google STUN endpoints. It does not establish or prove WireGuard connectivity.
