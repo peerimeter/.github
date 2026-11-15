@@ -82,7 +82,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - Created [peerimeter-agent](https://github.com/peerimeter/peerimeter-agent) as an independent repository. No service code/repository created ahead of Phase 2.
 - Implemented versioned strict static JSON parsing/validation, two public templates, secure fresh example generation, private key handling, Linux naming/ownership helpers, platform interfaces and foreground cleanup lifecycle tests.
 - Functional `run`, local `status`/`wg show`, safe `sync`/`stop`, protected operator IPC, and native service lifecycle are implemented and tested. Cobra owns CLI parsing/help/completion. The package workflow builds release archives and verifies installers.
-- Go **1.27.4** is required in the plan, modules and native CI. Agent self-update is a Phase 7 task.
+- Go **1.27.4** is required in the plan, modules and native CI. Agent self-update remains Phase 7 scope, brought forward for implementation.
 - Backend feasibility uses real official WireGuard implementations, independent of the unfinished agent.
 
 
@@ -307,3 +307,23 @@ infrastructure is provisioned. The sibling progress log reports local checks
 for the later CLI changes, but no fresh native pipeline run was available for
 that reviewed snapshot; the native pass cells above refer only to their recorded
 historical SHAs and must not be read as verification of `0c25855`.
+
+
+## Self-update implementation — 2026-11-15
+
+The user moved the Phase 7 self-update work forward. Implementation is in
+progress on `peerimeter-agent` branch `feat/agent-self-update`; it is not merged
+or independently reviewed yet. The current working tree adds explicit `update`,
+strict HTTPS `SHA256SUMS` package verification, inventory-selected program-file
+replacement, journaled rollback/recovery, service stop/start/readiness handling,
+and a Windows helper that leaves the pinned WireGuardNT DLL unchanged. The
+README states that SHA256SUMS shares the HTTPS release trust channel and does
+not claim detached signatures. It also records that Windows completion is
+asynchronous and recovery is operator-triggered.
+
+Local validation on Go 1.27.3 ARM64 with `CGO_ENABLED=0` passed `make test`,
+`make lint`, and `make build`; Linux/ARM64 native build plus Windows/AMD64 and
+macOS/ARM64 cross-builds passed. Changed Windows test packages compiled with
+`go test -c`. These results do not replace native update execution: Linux,
+macOS, Windows, failed-readiness rollback, and interrupted-update recovery still
+need native CI and independent review. Phase 7 is not complete.

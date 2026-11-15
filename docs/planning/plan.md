@@ -213,10 +213,13 @@ peerimeter-agent service migrate [--operator <identity>]
 peerimeter-agent service start|stop|uninstall
 peerimeter-agent uninstall [--dry-run]
 peerimeter-agent version
+peerimeter-agent check-update [--json]
+peerimeter-agent update [--json]
 peerimeter-agent completion bash|zsh|fish|powershell
 ```
 
 - Global output flags include `--json`, `--color auto|always|never`, and `--debug`; `version` and all command responses must remain safe for automation and redact secrets.
+- A bare invocation prints version and help, then checks for updates; `--help` never makes a network request. `check-update --json` reports `update_command: "peerimeter-agent update"` when an upgrade is available. Self-update is explicit and uses inventoried program files only.
 - `status --watch` refreshes a live terminal view; `--interval` is valid only with `--watch`. In JSON mode it emits newline-delimited snapshots until interrupted.
 - `wg` and `wg show` show the traditional WireGuard peer view. `wg --json` and `wg show --json` return the public peer array. `status --json` returns the local status snapshot. There is no separate `peers` CLI command in the current implementation.
 - `stun` is a diagnostic UDP mapping probe only. It accepts an optional local port and `--server`; absent `--server`, it tries the configured Google STUN endpoints. It does not establish or prove WireGuard connectivity.
@@ -733,7 +736,18 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 
 ### Phase 7 — Release hardening
 - [ ] Audit enrollment, configuration handling, authorization and gateway policies.
-- [ ] Implement agent self-update on Linux, macOS and Windows: explicit administrator-controlled enablement/update policy, authenticated release metadata and signature/integrity verification, OS/architecture compatibility checks, atomic installation, coordinated service restart and rollback on failure. Preserve protected keys, configuration, interface identity and offline static mode; verify successful updates, rejected invalid packages and recovery from interrupted or failed updates on all three OSes. Windows updates must also handle the bundled signed WireGuardNT component safely. Keep this work in this later phase, outside Phase 0/1.
+- [ ] Implement agent self-update on Linux, macOS and Windows: explicit operator
+  invocation, OS/architecture compatibility checks, strict SHA256SUMS package-
+  integrity verification over HTTPS, per-file atomic replacement, coordinated
+  service restart and rollback on failed readiness. The checksum manifest shares
+  the HTTPS release trust channel; do not describe it as a detached signature.
+  Preserve protected keys, configuration, interface identity, inventory-selected
+  directories and offline static mode; verify successful updates, rejected
+  invalid packages and recovery from interrupted or failed updates natively on
+  all three OSes. Windows must retain the bundled WireGuardNT hash and Authenticode
+  checks and replace a locked agent executable through a helper. This Phase 7
+  work has been brought forward for implementation; it is not complete until
+  native validation and independent review pass.
 - [ ] Document diagnostics, operating limits, installation, security model and NAT restrictions.
 - [ ] Repeat performance, E2E and failure recovery tests; publish supported-platform matrix.
 
