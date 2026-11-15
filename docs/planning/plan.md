@@ -217,7 +217,7 @@ peerimeter-agent service start|stop|uninstall
 peerimeter-agent uninstall [--dry-run]
 peerimeter-agent version
 peerimeter-agent check-update [--json]
-peerimeter-agent update [--json]
+peerimeter-agent self-update [--yes]
 peerimeter-agent completion bash|zsh|fish|powershell
 ```
 
