@@ -796,7 +796,7 @@ Update this section whenever a phase is finished or an important design constrai
 | Phase | Status | Notes |
 |---|---|---|
 | 0 — Baseline | Complete | Native Go 1.27.4 baseline and backend feasibility verified on all three; operational tunnel/IPC commands belong to Phase 1 |
-| 1 — Offline WG on Linux/macOS/Windows | Complete (core) | Native agent/service/installer scope passed independent review; latest build/test and integration CI passed; STUN add-on verification remains pending |
+| 1 — Offline WG on Linux/macOS/Windows | Complete (core) | Native agent/service/installer scope passed independent review; latest build/test and integration CI passed; native verification of later `wg show` CLI changes and the STUN add-on remains pending |
 | 2 — Agent self-update | Complete | Native updater build/test, installed-binary E2E, integration, package and review gates passed in agent PRs #37–#39 |
 | 3 — Server + sync | Not started | |
 | 4 — NAT + self-healing | Not started | |
