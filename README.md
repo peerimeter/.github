@@ -8,16 +8,78 @@ Peerimeter is a self-hosted WireGuard mesh agent for direct peer-to-peer connect
 
 The project is organized around two independent repositories:
 
-- **peerimeter-agent** — a headless Go agent and background service targeting Linux, macOS, and Windows. It runs independently using local static YAML configuration, with optional one-shot configuration pull and push commands for the service API.
-- **peerimeter-service** — a Go HTTP API that stores network and node configuration in a local JSON file. Writes are queued in memory and committed atomically by one service process. See the [service setup guide](https://service.peerimeter.app/) for a simple setup and Docker deployment.
+- **peerimeter-agent** — a headless Go agent targeting Linux, macOS, and Windows. It can run independently from local YAML or join a service-managed network and reconcile peers while running.
+- **peerimeter-service** — a Go HTTP API for creating WireGuard networks, assigning tunnel addresses, registering agents, and exchanging peer records. Network metadata is in the main JSON store; node configurations and registrations are separate YAML files. See the [service setup guide](https://service.peerimeter.app/) for deployment.
 
-Later milestones cover STUN-assisted endpoint discovery, connection recovery, and gateways for standard WireGuard clients. Connections are direct only: there is no relay fallback, so restrictive NAT or firewalls may prevent connectivity.
+Connections are direct only: UDP hole punching is best effort, with no TURN or relay fallback, so restrictive NAT or firewalls may prevent connectivity.
 
-**Status:** The agent, self-update, and initial service API are implemented and verified on Linux, macOS, and Windows where applicable. The service currently uses one local JSON file and a shared static API key; it does not include PostgreSQL, MQTT, user accounts, or multi-instance coordination. Agent service commands pull or push configuration on request; automatic runtime reconciliation is not included. The standalone STUN probe still needs native verification.
+**Status:** The service-managed `join` and peer-reconciliation increment is implemented in [agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51) and [service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7); hosted checks and review are in progress. It uses a shared static API key, one service instance, and direct-only peer connections. Per-device credentials, revocation/leave, PostgreSQL, MQTT, user accounts, and multi-instance coordination are not included.
 
 **Website:** [peerimeter.app](https://peerimeter.app) · [Agent installer](https://agent.peerimeter.app) · [Service setup](https://service.peerimeter.app).
 
 See [the implementation plan](https://github.com/peerimeter/.github/blob/main/docs/planning/plan.md), [additional requirements](https://github.com/peerimeter/.github/blob/main/docs/planning/additional-plan.md), and [progress tracker](https://github.com/peerimeter/.github/blob/main/docs/planning/progress.md).
+
+## Quick setup: register agents through the service
+
+Deploy `peerimeter-service` using the [service setup guide](https://service.peerimeter.app/).
+Configure a strong `PEERIMETER_API_KEY` on the service and set
+`PEERIMETER_PUBLIC_API_URL` to its public HTTPS URL. The join bundle contains
+that API URL and the same shared key; anyone with the bundle can administer all
+networks, so distribute it only to the machines you trust.
+
+Create a WireGuard address pool through the API. Pick a private CIDR that does
+not overlap the networks your machines already use:
+
+```sh
+export SERVICE_URL="https://service.example.com"
+export SERVICE_API_KEY="<the PEERIMETER_API_KEY configured on the service>"
+
+curl -fsS "$SERVICE_URL/api/v1/networks" \
+  -H "Authorization: Bearer $SERVICE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"version":1,"id":"home","name":"Home","cidr":"10.90.0.0/24"}'
+```
+
+Fetch the join bundle and save its `token` field to a protected file. `jq` is
+used here to extract the field from the JSON response:
+
+```sh
+curl -fsS "$SERVICE_URL/api/v1/join-bundle" \
+  -H "Authorization: Bearer $SERVICE_API_KEY" \
+  | jq -r '.token' > join-token.txt
+chmod 600 join-token.txt
+```
+
+Install `peerimeter-agent` on each machine using the [agent installation
+instructions](https://github.com/peerimeter/peerimeter-agent#release-installation),
+then copy `join-token.txt` to each machine over a trusted channel. Join once
+per machine, using the same network ID and a unique node ID:
+
+```sh
+sudo peerimeter-agent join \
+  --token-file "$HOME/join-token.txt" \
+  --network-id home \
+  --node-id workstation-a
+```
+
+On Windows, run an elevated PowerShell and use a token file whose ACL grants
+access only to the current user, SYSTEM, and Administrators:
+
+```powershell
+peerimeter-agent.exe join `
+  --token-file "$env:USERPROFILE\join-token.txt" `
+  --network-id home `
+  --node-id workstation-a
+```
+
+`join` creates and protects a WireGuard key, registers only its public key and
+the selected primary physical interface's addresses, receives its tunnel
+address from the service, and fetches peers every 15 seconds. Keep the command
+running in the foreground. Repeat it on each node with a different `--node-id`.
+The agent chooses an overlapping LAN address when available and otherwise uses
+the peer's discovered public UDP endpoint. A subnet match does not guarantee
+that the machines can reach each other; NAT and firewall limitations may still
+block a direct tunnel. `join` has no server-side leave/revoke operation yet.
 
 ## GitHub pull request settings
 
