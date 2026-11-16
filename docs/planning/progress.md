@@ -398,7 +398,7 @@ node-file migration, and malformed peer documents. The reviewed object was the
 uncommitted working diff, so no reviewed commit SHA is recorded.
 
 An independent review of service and agent code at the committed heads
-`cb6f0be2657ae7106ab3226754c12fe3111a7f8f` and
+`79593f91c0739a339beea8215eb96b57d25defac` and
 `df9d8bba9aed113312a772e572715bc45e700f52` found no blocking issue. It confirmed
 the config/registration storage separation, serialized non-overlapping CIDR
 allocation, join key handling and best-effort direct-only traversal claims.
@@ -410,14 +410,17 @@ Native LAN/NAT traversal and network-change recovery are still unverified, so
 the overall Phase 3/4 milestone remains in progress and is not marked complete.
 
 Local final gates passed before commit: service `go mod tidy -diff`,
-`CGO_ENABLED=0 go test ./...`, `go vet ./...`, `go build ./...`; agent
+`CGO_ENABLED=0 go test ./...`, `go vet ./...`, `go build ./...`; the service
+hosted `go test -race ./...` caught a nondeterministic map iteration assumption
+in a test, fixed in the follow-up commit below and passed locally without race
+instrumentation; agent
 `CGO_ENABLED=0 make lint`, `make test`, `make build`, Windows amd64 and macOS
 arm64 cross-builds; and `git diff --check` in all three repositories. The
 Termux host has Go 1.27.3; CI is pinned to 1.27.4. No hosted checks have run
 for these branches yet.
 
 Implementation commits: service
-[`cb6f0be`](https://github.com/peerimeter/peerimeter-service/commit/cb6f0be2657ae7106ab3226754c12fe3111a7f8f),
+[`79593f9`](https://github.com/peerimeter/peerimeter-service/commit/79593f91c0739a339beea8215eb96b57d25defac),
 agent
 [`df9d8bb`](https://github.com/peerimeter/peerimeter-agent/commit/df9d8bba9aed113312a772e572715bc45e700f52),
 and this tracker initially at
