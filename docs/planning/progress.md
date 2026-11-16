@@ -82,8 +82,8 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
-| `peerimeter-agent` | `091bd40` (accepted Phase 1); PR #49 head `01f7959` | 🔄 Phase 3 API config exchange | At current head: Linux/Windows build tests, Linux/Windows WireGuard integration, Linux/Windows packages and action-lock passed; macOS jobs and CodeRabbit review are pending. Local full test/lint/build and Windows/macOS cross-builds passed with Go 1.27.3 and `CGO_ENABLED=0`; hosted CI uses Go 1.27.4 |
-| `peerimeter-service` | `b2fba5e` (PR #2 merge); `f82c3f2` (settings guidance) | 🔄 Phase 3 API/storage and image release | Hosted main run `43844562558` passed all jobs, generated release `v0.1.0`, and pushed `ghcr.io/peerimeter/peerimeter-service:v0.1.0` and `:0.1.0` for amd64/arm64. PR #3 added the local settings policy and merged |
+| `peerimeter-agent` | `091bd40` (accepted Phase 1); discovery PR #51 head `444a952` | 🔄 Managed join and peer reconciliation | At previous discovery head, hosted Linux/Windows build and integration jobs passed. The review found five issues, fixed at `444a952`; current-head hosted CI and CodeRabbit review are running. Local full test/lint/build and Windows amd64/macOS arm64 cross-builds passed with Go 1.27.3 and `CGO_ENABLED=0`; hosted CI uses Go 1.27.4 |
+| `peerimeter-service` | `b2fba5e` (PR #2 merge); discovery PR #7 head `79593f9` | 🔄 Network API, node registration and peer discovery | Discovery PR `verify`, `action-lock` and aggregate `check` pass on `79593f9`; CodeRabbit review is pending. Main run `43844562558` passed all jobs, generated release `v0.1.0`, and pushed amd64/arm64 GHCR tags |
 
 ## Completed work
 
@@ -404,6 +404,13 @@ An independent review of service and agent code at the committed heads
 `df9d8bba9aed113312a772e572715bc45e700f52` found no blocking issue. It confirmed
 the config/registration storage separation, serialized non-overlapping CIDR
 allocation, join key handling and best-effort direct-only traversal claims.
+CodeRabbit on agent PR #51 then identified five additional correctness issues:
+the refresh worker could race shutdown; a selected endpoint could conflict
+with tunnel routes; generated config was written before complete validation;
+CIDRs could extend beyond an RFC1918 block; and route-source matching used
+subnet containment instead of the exact source address. These are fixed in
+agent commit `444a95201b75ec99de8c6f946a98e096eec91b80`, with regression tests;
+the current hosted checks and review are pending.
 Remaining limitations are the service-wide reusable API token (no per-device
 enrollment or revocation), stale registration cleanup (no `leave` API), and
 public STUN mappings captured only at join time (no same-socket remapping while
@@ -414,24 +421,26 @@ A VPN default route may cause safe discovery failure.
 Native LAN/NAT traversal and network-change recovery are still unverified, so
 the overall Phase 3/4 milestone remains in progress and is not marked complete.
 
-Local final gates passed before commit: service `go mod tidy -diff`,
+Local final gates passed: service `go mod tidy -diff`,
 `CGO_ENABLED=0 go test ./...`, `go vet ./...`, `go build ./...`; the service
 hosted `go test -race ./...` caught a nondeterministic map iteration assumption
 in a test, fixed in the follow-up commit below and passed locally without race
 instrumentation; agent
 `CGO_ENABLED=0 make lint`, `make test`, `make build`, Windows amd64 and macOS
-arm64 cross-builds; and `git diff --check` in all three repositories. The
-Termux host has Go 1.27.3; CI is pinned to 1.27.4. Hosted service checks pass
-on the corrected head; agent Linux/Windows jobs pass while macOS jobs and
-CodeRabbit reviews are still running. The docs PR review requested these status
-and limitation clarifications; the current head includes the fixes.
+arm64 cross-builds after the five review fixes; and `git diff --check` in all three repositories. The
+Termux host has Go 1.27.3; CI is pinned to 1.27.4. The service discovery PR
+checks pass; agent hosted checks and CodeRabbit review for the corrected head
+are running. The docs PR review requested the Phase 4 status and discovery
+limitation clarifications; those were fixed and merged in docs PR #20.
 
 Implementation commits: service
 [`79593f9`](https://github.com/peerimeter/peerimeter-service/commit/79593f91c0739a339beea8215eb96b57d25defac),
-agent
-[`df9d8bb`](https://github.com/peerimeter/peerimeter-agent/commit/df9d8bba9aed113312a772e572715bc45e700f52),
-and this tracker initially at
-[`422262a`](https://github.com/peerimeter/.github/commit/422262a).
+agent code/review fixes
+[`444a952`](https://github.com/peerimeter/peerimeter-agent/commit/444a95201b75ec99de8c6f946a98e096eec91b80),
+agent documentation
+[`290f56a`](https://github.com/peerimeter/peerimeter-agent/commit/290f56a3b0388597ce88f1bc021d6ca09a6f46ed),
+and the initial tracker changes merged in
+[`256faae`](https://github.com/peerimeter/.github/commit/256faae).
 
 Created the independent public [`peerimeter-service`](https://github.com/peerimeter/peerimeter-service)
 repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`,
