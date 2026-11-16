@@ -397,7 +397,9 @@ corrected with `go mod tidy`. Regression tests cover invalid IDs, legacy
 node-file migration, and malformed peer documents. The reviewed object was the
 uncommitted working diff, so no reviewed commit SHA is recorded.
 
-An independent review of the current diff found no blocking issue. It confirmed
+An independent review of service and agent code at the committed heads
+`cb6f0be2657ae7106ab3226754c12fe3111a7f8f` and
+`df9d8bba9aed113312a772e572715bc45e700f52` found no blocking issue. It confirmed
 the config/registration storage separation, serialized non-overlapping CIDR
 allocation, join key handling and best-effort direct-only traversal claims.
 Remaining limitations are the service-wide reusable API token (no per-device
@@ -406,6 +408,20 @@ public STUN mappings captured only at join time (no same-socket remapping while
 WireGuard owns the port). A VPN default route may cause safe discovery failure.
 Native LAN/NAT traversal and network-change recovery are still unverified, so
 the overall Phase 3/4 milestone remains in progress and is not marked complete.
+
+Local final gates passed before commit: service `go mod tidy -diff`,
+`CGO_ENABLED=0 go test ./...`, `go vet ./...`, `go build ./...`; agent
+`CGO_ENABLED=0 make lint`, `make test`, `make build`, Windows amd64 and macOS
+arm64 cross-builds; and `git diff --check` in all three repositories. The
+Termux host has Go 1.27.3; CI is pinned to 1.27.4. No hosted checks have run
+for these branches yet.
+
+Implementation commits: service
+[`cb6f0be`](https://github.com/peerimeter/peerimeter-service/commit/cb6f0be2657ae7106ab3226754c12fe3111a7f8f),
+agent
+[`df9d8bb`](https://github.com/peerimeter/peerimeter-agent/commit/df9d8bba9aed113312a772e572715bc45e700f52),
+and this tracker initially at
+[`422262a`](https://github.com/peerimeter/.github/commit/422262a).
 
 Created the independent public [`peerimeter-service`](https://github.com/peerimeter/peerimeter-service)
 repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`,
