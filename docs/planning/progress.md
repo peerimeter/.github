@@ -4,10 +4,10 @@
 
 ## Current status
 
-- **Active work:** ✅ Phase 0 complete; ✅ Phase 1 complete; ✅ Phase 2 agent self-update complete; 🔄 Phase 3 service/control plane in progress.
-- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Service PR #2 merged, then main generated `v0.1.0`, published the GitHub Release, and pushed both GHCR image tags. Agent PR #49 adds one-shot config API pull/push and fixes the reviewed Windows ACL issue; some macOS jobs and its new CodeRabbit review are still running.
-- **Repositories:** `peerimeter-agent` (Phases 0–2, complete); `peerimeter-service` (Phase 3 onward, in progress). Two independent Git repositories.
-- **Next action:** Complete agent PR #49 review/CI and shared-settings PR #17, then continue managed join and runtime sync in small increments.
+- **Active work:** ✅ Phases 0–2 complete; 🔄 Phases 3–5 in progress.
+- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 5 has a separate React/Vite dashboard with API-key login, network creation/listing, peer display/editing, and cross-platform join commands. Dashboard PR #1 and service PR #10 now include the review fixes; local checks and independent review pass, while hosted CI and CodeRabbit are running.
+- **Repositories:** `peerimeter-agent` (Phases 0–2 and managed join); `peerimeter-service` (Phase 3 onward); `peerimeter-dashboard` (Phase 5 UI). Three independent Git repositories plus this shared `.github` documentation/configuration repository.
+- **Next action:** Complete dashboard PR #1 and service PR #10 review/CI, then continue managed join and runtime sync in small increments.
 
 The phase numbering below supersedes historical entries: agent self-update is now
 Phase 2, and the former control-plane through release-hardening phases move to
@@ -26,17 +26,18 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/`wg show` belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
-| 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage merged in service PR #1; scratch runtime and main SemVer image publishing in service PR #2. Agent PR #49 adds one-shot network/node JSON pull/push from the join bundle. The bundle's `enrollment_token` is currently the shared static API key. Durable enrollment, runtime reconciliation, scoped credentials, PostgreSQL/MQTT and host-file DNS remain outstanding |
+| 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage merged in service PR #1; scratch runtime and main SemVer image publishing in service PR #2. Agent PR #49 adds one-shot network/node JSON pull/push from the join bundle. The bundle's `enrollment_token` is currently the shared static API key. Service PR #10 adds exact-origin dashboard CORS and network-wide peer listing. Durable enrollment, runtime reconciliation, scoped credentials, PostgreSQL/MQTT and host-file DNS remain outstanding |
 | 4 — NAT traversal + self-healing | 🔄 In progress | User-prioritized increment adds primary-interface underlay reporting and best-effort direct UDP discovery; no relay. Native LAN/NAT traversal and network-change recovery remain unverified |
-| 5 — Browser dashboard + GitHub SSO | ⬜ Not started | |
+| 5 — Browser dashboard + GitHub SSO | 🔄 In progress | Dashboard PR #1 provides API-key sign-in, network create/list, peer list and metadata editing, network-scoped join commands, `VITE_SERVICE_URL`, Playwright tests, and `test:ui`. GitHub SSO remains a later increment. |
 | 6 — External WireGuard client gateway | ⬜ Not started | |
 | 7 — Cross-platform resilience + packaging | ⬜ Not started | |
 | 8 — Release and hardening | ⬜ Not started | |
 
-## Two-repository checklist
+## Repository checklist
 
 - [x] `peerimeter-agent` initialized with independent `.git`, `go.mod`, and CI.
 - [x] `peerimeter-service` initialized separately at Phase 3 with independent `.git`, `go.mod`, and CI workflow (initial API merged in PR #1).
+- [x] `peerimeter-dashboard` initialized separately at Phase 5 with React/Vite, browser tests and CI (PR #1 in review).
 - [ ] Cross-repo versioned HTTP/JSON and MQTT contracts defined and tested without relative module imports.
 - [ ] Record tested commit hash and status for each repository.
 
@@ -83,7 +84,8 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `091bd40` (Phase 1); `8a6fb0d` (verified Phase 2, [PR #39](https://github.com/peerimeter/peerimeter-agent/pull/39)); discovery PR #51 head `444a952` | 🔄 Managed join and peer reconciliation | At previous discovery head, hosted Linux/Windows build and integration jobs passed. The review found five issues, fixed at `444a952`; current-head hosted CI and CodeRabbit review are running. Local full test/lint/build and Windows amd64/macOS arm64 cross-builds passed with Go 1.27.3 and `CGO_ENABLED=0`; hosted CI uses Go 1.27.4 |
-| `peerimeter-service` | `b2fba5e` (PR #2 merge); discovery PR #7 head `79593f9` | 🔄 Network API, node registration and peer discovery | Discovery PR `verify`, `action-lock` and aggregate `check` pass on `79593f9`; CodeRabbit review is pending. Main run `43844562558` passed all jobs, generated release `v0.1.0`, and pushed amd64/arm64 GHCR tags |
+| `peerimeter-service` | `b2fba5e` (PR #2 merge); PR #10 head `1824bfa` | 🔄 Network API, node registration and peer discovery | Local `make test`, `make build`, `go vet ./...` pass on `1824bfa`; hosted `verify` and CodeRabbit are running; `action-lock` passed. PR #10 enables configured dashboard CORS and adds the authenticated network-wide peer listing route. |
+| `peerimeter-dashboard` | PR #1 head `c9aeeef` | 🔄 API-key dashboard UI | Local Vitest (11), Playwright E2E (2), TypeScript, Vite build and `git diff --check` pass. Hosted `check`, Cloudflare Pages build and CodeRabbit are pending. |
 
 ## Completed work
 
@@ -124,15 +126,15 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 ## Architectural decisions
 
 - No relay and no desktop UI.
-- Separate `peerimeter-agent` and `peerimeter-service` Git repositories; no monorepo.
+- Separate `peerimeter-agent`, `peerimeter-service` and `peerimeter-dashboard` Git repositories; no monorepo.
 - Cross-platform static JSON WireGuard agent is P0; API is optional until Phase 3.
 - Managed join bundle includes both HTTPS API URL and opaque enrollment token; Base64URL is not encryption.
 - Linux interface naming is local to each enrolled agent/network; see `additional-plan.md`.
 
 ## Next steps
 
-1. Verify the published v0.17.0 installation path when requested.
-2. Begin Phase 3 control-plane/API/enrollment work only when requested; retain the offline agent contract.
+1. Complete dashboard PR #1 and service PR #10 checks and reviews, then update this tracker with the merged commits.
+2. Continue managed enrollment and runtime reconciliation while retaining offline static WireGuard operation.
 3. Add reachable mixed-OS VM tests and later NAT/disruption recovery tests without treating cross-builds as runtime proof.
 
 ## Session log — 2026-11-11
