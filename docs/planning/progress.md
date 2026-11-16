@@ -5,7 +5,7 @@
 ## Current status
 
 - **Active work:** ✅ Phase 0 complete; ✅ Phase 1 complete; ✅ Phase 2 agent self-update complete; 🔄 Phase 3 service/control plane in progress.
-- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 3 service PR #1 adds the first API/storage slice; its hosted CI and review are pending.
+- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 3 service PR #1's Go 1.27.4 test/build/Docker/lock CI passed; automated code review is pending.
 - **Repositories:** `peerimeter-agent` (Phases 0–2, complete); `peerimeter-service` (Phase 3 onward, in progress). Two independent Git repositories.
 - **Next action:** Complete review and hosted checks for service PR #1, then integrate the agent's managed join and config sync in small increments.
 
@@ -55,7 +55,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - [x] `peerimeter-agent/.github/workflows/connectivity-e2e.yml` exists as a manual entry point and reports a blocked result until a mixed-OS/NAT topology is provisioned; no connectivity pass is claimed.
 - [x] macOS/Windows GitHub-hosted tunnel feasibility checked: both passed on the exact target images; no self-hosted fallback currently needed.
 - [x] All integration skips and missing infrastructure are reported explicitly, never as a pass; agent E2E remains unavailable and manual E2E workflow fails with a blocked explanation.
-- [x] `peerimeter-service` independent CI added at Phase 3; PR #1 `verify`, `action-lock` and aggregate `check` are pending hosted runner results.
+- [x] `peerimeter-service` independent CI added at Phase 3; PR #1 `verify`, `action-lock` and aggregate `check` passed on hosted Ubuntu at `662c4c4` (run `43790849468`).
 
 ## Additional requirements checklist
 
@@ -83,7 +83,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `8a6fb0d` (progress UX merged); `1f7a1fc` (confirmation and native updater CI); `091bd40` (accepted Phase 1) | ✅ Phase 2 complete | Native build/tests, installed-binary E2E, WireGuard integration, all package targets and CodeRabbit review passed |
-| `peerimeter-service` | `662c4c442a4b43b9889fbfe0e6850ebef9df6182` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build and action-lock passed; hosted CI pending; local Go 1.27.4 invocation/race/Docker unavailable |
+| `peerimeter-service` | `662c4c442a4b43b9889fbfe0e6850ebef9df6182` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build passed; hosted Go 1.27.4 race/tests/vet/build/Docker/action-lock passed at run `43790849468`; automated review pending |
 
 ## Completed work
 
@@ -386,9 +386,10 @@ Local validation at the current commit used Go 1.27.3 on Linux ARM64 with
 has no C compiler or Docker engine, so race tests and a container build have not
 run locally. Invoking the local Go 1.27.4 toolchain segfaults before reporting
 its version; hosted CI uses `.go-version` to install and test with 1.27.4.
-Hosted PR checks are pending at
-[`run 43790849468`](https://github.com/peerimeter/peerimeter-service/actions/runs/43790849468).
-The PR has no requested reviews yet. The service repository has no branch
+Hosted PR run [`43790849468`](https://github.com/peerimeter/peerimeter-service/actions/runs/43790849468)
+passed: its Ubuntu runner installed Go 1.27.4 from `.go-version`, then passed
+format, vet, race/tests, binary build, Docker build, action-lock verification
+and aggregate `check`. CodeRabbit review is still in progress. The service repository has no branch
 protection configured, so auto-merge remains disabled. Phase 3 is in progress;
 agent enrollment/sync, scoped credentials, PostgreSQL/MQTT, host-file DNS and
 independent phase review remain outstanding.
