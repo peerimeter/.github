@@ -27,7 +27,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
 | 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage merged in service PR #1; scratch runtime and main SemVer image publishing in service PR #2. Agent PR #49 adds one-shot network/node JSON pull/push from the join bundle. The bundle's `enrollment_token` is currently the shared static API key. Durable enrollment, runtime reconciliation, scoped credentials, PostgreSQL/MQTT and host-file DNS remain outstanding |
-| 4 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
+| 4 — NAT traversal + self-healing | 🔄 In progress | User-prioritized increment adds primary-interface underlay reporting and best-effort direct UDP discovery; no relay. Native LAN/NAT traversal and network-change recovery remain unverified |
 | 5 — Browser dashboard + GitHub SSO | ⬜ Not started | |
 | 6 — External WireGuard client gateway | ⬜ Not started | |
 | 7 — Cross-platform resilience + packaging | ⬜ Not started | |
