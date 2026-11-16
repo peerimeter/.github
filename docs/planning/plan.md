@@ -31,13 +31,13 @@
 ### Goals
 
 - Self-hosted Netmaker-like **WireGuard full mesh** between registered devices.
-- Go-based central server (`peerimeter-service`) exposing authenticated REST API and serving an embedded web dashboard.
+- Go-based central server (`peerimeter-service`) exposing the authenticated REST API used by the dashboard and agents.
 - Go-based headless, continuously running CLI/service (`peerimeter-agent`) for Linux, macOS, and Windows, all three supported in the **first connectivity milestone**, without any API dependency, using local static JSON.
 - Central authoritative desired-state configuration with monotonic revisioning; agents can always fetch their latest authorized configuration.
 - MQTT-over-TLS event notifications for fast updates; lost notifications must be repaired by periodic reconciliation.
 - Direct endpoint discovery via STUN, endpoint candidate exchange, NAT traversal/hole punching where practical, and robust reaction to local/public IP and port changes.
 - Full handling of WireGuard state without restarting the interface on normal peer changes.
-- GitHub OAuth **for dashboard users**; separate short-lived enrollment authorization and device authentication for agents.
+- Planned GitHub OAuth for dashboard users; the initial dashboard increment uses the current shared API key. Agent enrollment authorization and device authentication remain separate.
 - Modern browser-only React dashboard with network/peer management, observable peer graph, current state, and diagnostics.
 - External **standard WireGuard clients** connecting to a selected Peerimeter gateway peer; initially NAT/SNAT mode, later optional routed mode. The gateway may forward only to explicitly authorized mesh destinations.
 - Docker Compose deployment of server, PostgreSQL, and MQTT broker.
@@ -56,19 +56,18 @@
 
 ```text
                          Browser
-                      (React dashboard)
+                 (peerimeter-dashboard)
                              |
                           HTTPS
                              |
                   +-----------------------+
                   | peerimeter-service (Go)  |
-                  | REST API + GitHub SSO |
+                  | REST API + CORS     |
                   | Network & peer CRUD   |
                   | Enrollment & auth     |
                   | Config revisions      |
                   | Endpoint coordinator  |
                   | Diagnostics/status    |
-                  | Embedded web assets   |
                   +-----------+-----------+
                               |
                    +----------+----------+
@@ -108,26 +107,27 @@
 | WireGuard control | `wgctrl-go` | Linux kernel backend; OS-specific adapters for macOS/Windows |
 | Linux OS networking | netlink | Interface IPs/routes/firewall management |
 | STUN | `pion/stun` (or equivalent) | Validate UDP socket/mapping behavior before relying on discovered ports |
-| Web | Vite + React + TypeScript | Static assets embedded in Go binary via `go:embed` |
+| Web | Vite + React + TypeScript | Separate static app in `peerimeter-dashboard`; exact allowlisted CORS when hosted apart from the API |
 | UI | Tailwind CSS + shadcn/ui | Peer graph via React Flow / XYFlow |
-| Auth | GitHub OAuth authorization-code flow | Secure server-side session cookies; CSRF/state; PKCE when appropriate |
+| Auth | Current dashboard increment: shared service API key; planned: GitHub OAuth | Keep the shared key in tab-scoped session state; future OAuth uses secure server-side sessions |
 | Tests | Go `testing`, `httptest`, container/network integration tests | Browser E2E optional later |
 | Deployment | Docker Compose | Server, PostgreSQL, Mosquitto, reverse proxy/TLS documented |
 
 **Platform strategy:** Linux, macOS, and Windows in the first implementation milestone using static local JSON and no central server. macOS and Windows must use tested, officially supported WireGuard integration approaches; do not assume `wgctrl-go` can create adapters or manage routes on every OS. Encapsulate interface creation, lifecycle, addresses, routes, forwarding, and firewall in OS adapters.
 
-**Go toolchain (mandatory from Phase 0):** Use **Go 1.27.4** consistently in both repositories, local development, all three native CI jobs, integration-test helpers and release builds. Pin the version explicitly in module/toolchain configuration and CI; do not use floating `stable` or silently upgrade to a different patch release. Future version changes require an explicit update to this plan and the corresponding build configuration.
+**Go toolchain (mandatory from Phase 0):** Use **Go 1.27.4** consistently in both Go repositories, local development, all three native CI jobs, integration-test helpers and release builds. Pin the version explicitly in module/toolchain configuration and CI; do not use floating `stable` or silently upgrade to a different patch release. Future version changes require an explicit update to this plan and the corresponding build configuration.
 
 **Windows driver installation (mandatory from Phase 1):** The `peerimeter-agent` installer must bundle the official, correctly signed WireGuardNT component for the target architecture and, with administrator privileges, arrange installation of the required driver before creating the first tunnel. Users must not need to download or manually install the separate WireGuard application or GUI. Use the officially supported WireGuardNT/embeddable integration, pin the bundled version, and verify its signature/integrity. Driver provisioning must work offline from the agent installation package so static mode has no installation-time download dependency. Verify the complete installation and native tunnel operation on a clean Windows runner without a preinstalled WireGuard package.
 
-## 4. TWO INDEPENDENT GIT REPOSITORIES (mandatory)
+## 4. THREE INDEPENDENT CODE REPOSITORIES (mandatory)
 
-This project is **not a monorepo**. Create and maintain exactly two separate Git repositories, with independent `go.mod`, CI pipelines, versioning, release artifacts, and issue tracking:
+This project is **not a monorepo**. Maintain three separate code repositories with independent CI pipelines, versioning, release artifacts, and issue tracking. The two Go repositories have independent `go.mod` files:
 
 1. **`peerimeter-agent`** — headless Go CLI/background service, Linux/macOS/Windows WireGuard adapters, offline static JSON, and (later) enrollment/config sync, STUN and recovery. **Implement this repository first.**
-2. **`peerimeter-service`** — central Go REST API, PostgreSQL migrations, MQTT event publishing, GitHub SSO, embedded React browser dashboard, and external-client/gateway management API. Implement after the agent's offline cross-platform milestone.
+2. **`peerimeter-service`** — central Go REST API, configuration storage, PostgreSQL migrations, MQTT event publishing, future GitHub SSO API support, and external-client/gateway management API. Implement after the agent's offline cross-platform milestone.
+3. **`peerimeter-dashboard`** — browser-only React/TypeScript static UI consuming the service's versioned REST API. Its first increment uses the service API key; GitHub OAuth can replace it when user accounts are implemented. The service remains independently buildable and does not embed this frontend.
 
-The directory containing the two repositories is only a local workspace, **not a third Git repository**:
+The local workspace contains the three code repositories and the shared `.github` planning repository; its parent is not a Git repository:
 
 ```text
 workspace/
@@ -136,7 +136,7 @@ workspace/
 │   └── docs/planning/
 │       ├── plan.md
 │       ├── additional-plan.md
-│       ├── progress.md      # shared tracker for both code repositories
+│       ├── progress.md      # shared tracker for code repositories
 │       └── codex-prompt.md
 ├── peerimeter-agent/           # its own .git and go.mod
 │   ├── .git/
@@ -155,18 +155,23 @@ workspace/
     ├── cmd/peerimeter-service/main.go
     ├── internal/service/{api,auth,enrollment,networks,peers,config,discovery,gateways,events,storage}/
     ├── pkg/{protocol,models}/
-    ├── web/{src,package.json}/
     ├── migrations/
     ├── deployments/{compose.yaml,mosquitto/}/
     ├── tests/{integration,e2e}/
+    └── README.md
+└── peerimeter-dashboard/       # its own .git and React manifests
+    ├── .git/
+    ├── package.json
+    ├── src/
+    ├── e2e/
     └── README.md
 ```
 
 **Interface naming:** Linux defaults to `pm-$networkName`, with the 15-byte safe algorithm and explicit local override from `additional-plan.md`.
 
-**Cross-repo contract:** Do not use `replace ../peerimeter-*`, cross-repo `internal/` imports, symlinks, or vendored source as the long-term integration strategy. Define a versioned HTTP/JSON and MQTT message contract (OpenAPI + JSON schemas, or generated versioned Go client package) owned by `peerimeter-service`, with pinned releases or schema snapshots consumed by `peerimeter-agent`. Schema evolution must be backward compatible or versioned explicitly. Use contract compatibility tests on both repositories. For P0/P1 the agent must compile and function without cloning the service repository or obtaining any server schema.
+**Cross-repo contract:** Do not use `replace ../peerimeter-*`, cross-repo `internal/` imports, symlinks, or vendored source as the long-term integration strategy. Define a versioned HTTP/JSON and MQTT message contract (OpenAPI + JSON schemas, or generated versioned Go client package) owned by `peerimeter-service`, with pinned releases or schema snapshots consumed by `peerimeter-agent` and `peerimeter-dashboard`. Schema evolution must be backward compatible or versioned explicitly. Use contract compatibility tests in the Go repositories and dashboard. For P0/P1 the agent must compile and function without cloning the service repository or obtaining any server schema.
 
-**Coordination:** Make commits only in the affected repository, and record each repository's commit hash, test results and current milestone separately in `docs/planning/progress.md`. Do not imply cross-repo atomic commits. The service owns persistence and authentication; the agent owns all OS network operations. Keep `peerimeter-agent` operational when the service is offline.
+**Coordination:** Make commits only in the affected repository, and record each code repository's commit hash, test results and current milestone separately in `docs/planning/progress.md`. Do not imply cross-repo atomic commits. The service owns persistence and API authentication; the dashboard owns browser presentation; the agent owns all OS network operations. Keep `peerimeter-agent` operational when the service is offline.
 
 ## 5. Core data model
 
@@ -585,10 +590,11 @@ Use conventional HTTP status semantics and consistent error envelopes. Implement
 
 ## 12. Browser dashboard
 
-- Frontend runs **only in browser**, served by central Go server; **no desktop app**.
-- Build with Vite/React/TypeScript/Tailwind/shadcn/ui. Compile assets and embed via `go:embed` in production server.
+- Frontend runs **only in browser**, built and versioned in the separate `peerimeter-dashboard` repository; **no desktop app**.
+- Build with Vite/React/TypeScript. Serve the static assets independently or through a reverse proxy alongside the service; do not embed the frontend in the Go binary.
+- When the app and API use different origins, enable service CORS only for exact trusted origins; never use wildcard origins.
 - Pages: Overview, Networks, Peers, Topology Graph, Gateways, External Clients, Diagnostics, Settings.
-- Login with GitHub; admin/user controls enforced by backend, not just hidden in the frontend.
+- The initial dashboard increment uses the current shared API key, stored only for the active browser tab session. Later add GitHub OAuth and enforce admin/user controls in the backend, not just hidden in the frontend.
 - Topology graph uses **observed actual** connectivity, not merely desired mesh edges. Show online/offline, direct connectivity, last seen, last handshake, actual measured RTT where available, gateway role, and endpoint/reconnect history.
 - Avoid displaying public endpoint data to unauthorized users. Mask secrets. Do not invent metrics when no agent measurement exists.
 - Real-time updates via SSE initially (simpler than WS); reconnect with backoff and initial snapshot reload.
@@ -662,7 +668,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 
 **Phase 0 CI acceptance gate:** all three native `test` jobs build, validate offline static JSON and pass unit/CLI tests; all three privileged-WG feasibility checks are attempted and truthfully documented. **Phase 1 native acceptance gate:** all three native `integration` jobs demonstrate genuine handshake and tunnel traffic, using hosted or dedicated runners; native package/installer jobs pass on supported targets. Record any remaining blockers rather than claiming completed verification. Mixed-OS connectivity is additionally required for release hardening and should be exercised earlier whenever infrastructure exists.
 
-## 15. Phased roadmap and acceptance criteria — two-repository priority
+## 15. Phased roadmap and acceptance criteria — independent repositories
 
 **MANDATORY ORDER:** Cross-platform static JSON agent comes first. Server API, database, MQTT, GitHub SSO, web dashboard and STUN are **not** prerequisites for the first working milestone. Follow the stronger, detailed requirements in `additional-plan.md` sections A4–A6.
 
@@ -731,11 +737,14 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 **Done when:** same-LAN peers can discover and use reachable internal endpoints, and documented public-IP/port-change scenarios recover autonomously where direct connectivity is feasible.
 
 ### Phase 5 — Browser dashboard and GitHub SSO
-- [ ] React/TypeScript dashboard with OAuth, network management, enrollment-token generation and peer graph.
+- [x] Separate React/TypeScript dashboard repository with API-key sign-in, network creation/listing, registered peer listing and metadata editing, plus Linux/macOS/Windows join commands. Implementation is in dashboard PR #1.
+- [x] Service CORS allowlist from environment for exact trusted browser origins, network-wide peer listing, and dashboard default API URL from `VITE_SERVICE_URL`. Service implementation is in PR #10.
+- [ ] Replace the shared API key with GitHub OAuth and user roles when service-side user accounts are implemented.
+- [ ] Add topology graph, diagnostics and service-backed live state as those API capabilities become available.
 - [ ] Show actual connection observations and diagnostics, not fabricated live status.
-- [ ] Embed production frontend assets in Go server.
+- [ ] Add production static hosting and document HTTPS reverse-proxy deployment.
 
-**Done when:** user can administer networks and create join bundles through the browser.
+**Done when:** users can securely sign in, administer networks/peers, and create join bundles through the browser; OAuth, observed-state graph and diagnostics must match actual API capabilities.
 
 ### Phase 6 — External WireGuard clients via Linux gateway
 - [ ] Gateway external WG interface, separate address pool and client registration/revocation.

@@ -6,14 +6,15 @@
 
 Peerimeter is a self-hosted WireGuard mesh agent for direct peer-to-peer connections. The agent can use local configuration independently, while an optional control-plane service provides a shared API for network and node configuration.
 
-The project is organized around two independent repositories:
+The project is organized around three independent code repositories:
 
 - **peerimeter-agent** — a headless Go agent targeting Linux, macOS, and Windows. It can run independently from local YAML or join a service-managed network and reconcile peers while running.
 - **peerimeter-service** — a Go HTTP API for creating WireGuard networks, assigning tunnel addresses, registering agents, and exchanging peer records. Network metadata is in the main JSON store; node configurations and registrations are separate YAML files. See the [service setup guide](https://service.peerimeter.app/) for deployment.
+- **peerimeter-dashboard** — a React and TypeScript browser UI for API-key sign-in, network and peer management, and cross-platform agent join commands. See the [dashboard source](https://github.com/peerimeter/peerimeter-dashboard).
 
 Connections are direct only: UDP hole punching is best effort, with no TURN or relay fallback, so restrictive NAT or firewalls may prevent connectivity.
 
-**Status:** The service-managed `join` and peer-reconciliation increment is implemented in [agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51) and [service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7); hosted checks and review are in progress. It uses a shared static API key, one service instance, and direct-only peer connections. Per-device credentials, revocation/leave, PostgreSQL, MQTT, user accounts, and multi-instance coordination are not included.
+**Status:** The service-managed `join` and peer-reconciliation increment is merged in [agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51) and [service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7). The API-key dashboard is in [dashboard PR #1](https://github.com/peerimeter/peerimeter-dashboard/pull/1), with its CORS allowlist and dashboard peer-list API in [service PR #10](https://github.com/peerimeter/peerimeter-service/pull/10). It uses a shared static API key, one service instance, and direct-only peer connections. Per-device credentials, revocation/leave, PostgreSQL, MQTT, user accounts, and multi-instance coordination are not included.
 
 **Website:** [peerimeter.app](https://peerimeter.app) · [Agent installer](https://agent.peerimeter.app) · [Service setup](https://service.peerimeter.app).
 
@@ -110,20 +111,25 @@ block a direct tunnel. `join` has no server-side leave/revoke operation yet.
 
 ## GitHub pull request settings
 
-Checked through the GitHub REST API on **2026-11-16**, after the branch-protection
-settings were updated. The two code repositories allow auto-merge and rebase-only merges,
-require linear history, require up-to-date branches and resolved review
-conversations, and delete branches after merge. Neither requires an approving
-review, and admin enforcement is off.
+Checked through the GitHub REST API on **2026-11-16**. The shared planning/site
+repository and all three code repositories use the same general pull request
+settings. The `main` branch protections are listed separately below.
 
-| Repository | Required status checks on `main` | Require up-to-date branch | Require all review conversations resolved |
-| --- | --- | --- | --- |
-| [`peerimeter/.github`](https://github.com/peerimeter/.github) | `CodeRabbit` | Yes (`strict: true`) | Yes |
-| [`peerimeter/peerimeter-agent`](https://github.com/peerimeter/peerimeter-agent) | `check`, `CodeRabbit` | Yes (`strict: true`) | Yes |
-| [`peerimeter/peerimeter-service`](https://github.com/peerimeter/peerimeter-service) | `check`, `CodeRabbit` | Yes (`strict: true`) | Yes |
+| Repository | Auto-merge | Always suggest updating PR branches | Delete head branch after merge | Merge strategy |
+| --- | --- | --- | --- | --- |
+| [`peerimeter/.github`](https://github.com/peerimeter/.github) | Yes | Yes | Yes | Rebase only |
+| [`peerimeter/peerimeter-agent`](https://github.com/peerimeter/peerimeter-agent) | Yes | Yes | Yes | Rebase only |
+| [`peerimeter/peerimeter-service`](https://github.com/peerimeter/peerimeter-service) | Yes | Yes | Yes | Rebase only |
+| [`peerimeter/peerimeter-dashboard`](https://github.com/peerimeter/peerimeter-dashboard) | Yes | Yes | Yes | Rebase only |
 
-The settings now match on branch freshness and conversation resolution. Both
-code repositories require the pipeline's aggregate `check`. Keep
-inspecting, addressing and resolving review conversations before auto-merge;
-GitHub now enforces both conversation resolution and branch freshness. Refresh
-this summary when repository rules change.
+| Repository `main` protection | Required status checks | Require up-to-date branch | Require all review conversations resolved | Linear history | Force-push / branch deletion | Required approvals | Enforce for admins |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [`peerimeter/.github`](https://github.com/peerimeter/.github) | `CodeRabbit` | Yes (`strict: true`) | Yes | Yes | Disabled | 0 | No |
+| [`peerimeter/peerimeter-agent`](https://github.com/peerimeter/peerimeter-agent) | `check`, `CodeRabbit` | Yes (`strict: true`) | Yes | Yes | Disabled | 0 | No |
+| [`peerimeter/peerimeter-service`](https://github.com/peerimeter/peerimeter-service) | `check`, `CodeRabbit` | Yes (`strict: true`) | Yes | Yes | Disabled | 0 | No |
+| [`peerimeter/peerimeter-dashboard`](https://github.com/peerimeter/peerimeter-dashboard) | `check`, `CodeRabbit` | Yes (`strict: true`) | Yes | Yes | Disabled | 0 | No |
+
+The dashboard repository now matches the agent and service code-repository
+settings. Keep inspecting, addressing and resolving review conversations before
+auto-merge; GitHub enforces branch freshness and conversation resolution.
+Refresh this summary when repository rules change.

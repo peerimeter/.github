@@ -1,6 +1,6 @@
 # Repository guidance
 
-This is the independent `peerimeter/.github` repository. It contains the Peerimeter organization profile, project website, assets, and shared planning documents. The sibling `../peerimeter-agent` and `../peerimeter-service` directories are separate Git repositories; the workspace parent is not a repository.
+This is the independent `peerimeter/.github` repository. It contains the Peerimeter organization profile, project website, assets, and shared planning documents. The sibling `../peerimeter-agent`, `../peerimeter-service`, and `../peerimeter-dashboard` directories are separate Git repositories; the workspace parent is not a repository.
 
 ## Where to look
 
@@ -14,8 +14,8 @@ This is the independent `peerimeter/.github` repository. It contains the Peerime
 
 ## Working agreements
 
-- Keep planning claims aligned with `peerimeter-agent/README.md`, its current implementation, `docs/planning/progress.md`, and actual CI evidence. The shared tracker is in this repository; do not expect an agent-root `progress.md`. Distinguish implemented features, planned features, and unverified network scenarios.
-- Preserve the two-repository separation. Make changes and commits in the affected repository only; do not treat sibling changes as one atomic commit.
+- Keep planning claims aligned with the agent, service and dashboard READMEs, their current implementations, `docs/planning/progress.md`, and actual CI evidence. The shared tracker is in this repository; do not expect duplicate per-repository progress files. Distinguish implemented features, planned features, and unverified network scenarios.
+- Preserve the three-code-repository separation (`peerimeter-agent`, `peerimeter-service`, `peerimeter-dashboard`). Make changes and commits in the affected repository only; do not treat sibling changes as one atomic commit. This `.github` repository remains the shared planning/site repository.
 - Peerimeter uses direct WireGuard connections without a relay. Do not claim STUN alone guarantees NAT traversal.
 - Follow the shared [repository conventions](docs/repository-conventions.md) for secrets, commits, branches, pull requests, checks and completion claims.
 - In `peerimeter-service`, keep the Go module directive at `go 1.27` and pin the exact development/CI patch release in `.go-version`. Service CI and container builds should use that pinned release.
@@ -23,7 +23,7 @@ This is the independent `peerimeter/.github` repository. It contains the Peerime
 - In GitHub Actions workflows, use explicit action release tags and maintain `.github/workflows/actions.lock` with `gh actions-lock`. CI must run `gh actions-lock --verify`; update the generated lock whenever workflow action references change, and never edit the lock by hand.
 - Assign every PR, including documentation-only PRs, to the GitHub user who requested the work. Use `@me` with `gh pr edit` only when the authenticated `gh` account is that requester; otherwise specify the requester's GitHub username explicitly.
 - Auto-merge is the default for every PR. After opening a PR, verify repository settings require status checks, all review conversations to be resolved, and **Require branches to be up to date before merging**; then enable auto-merge immediately and let branch protection gate the merge. If any of those protections are absent, leave auto-merge off and report the configuration gap.
-- Keep general settings for the Peerimeter code repositories `peerimeter-agent` and `peerimeter-service` aligned: enable auto-merge and branch updates, delete head branches after merge, allow rebase merges only, and disable merge commits and squash merges. Protect their `main` branches with strict required checks (`check` and `CodeRabbit`), resolved conversations, linear history, and no force-push or branch deletion; approval count may remain zero unless the project owner changes it. The `peerimeter/.github` docs/site repository currently requires `CodeRabbit` only; do not require a `check` status there unless a workflow that reports it is added.
+- Keep general settings for the Peerimeter repositories aligned: enable auto-merge, **Always suggest updating pull request branches**, delete head branches after merge, allow rebase merges only, and disable merge commits and squash merges. Protect code `main` branches with strict required checks (`check` and `CodeRabbit`), resolved conversations, linear history, and no force-push or branch deletion; approval count may remain zero unless the project owner changes it. The `peerimeter/.github` docs/site repository requires `CodeRabbit` only; do not require a `check` status there unless a workflow that reports it is added.
 - Inspect automated review feedback on every current PR head, including CodeRabbit findings. Verify each finding against the current change, fix valid issues, and resolve every review conversation before the PR can merge. Recheck feedback after each push; required checks, conversation resolution, and strict branch freshness must pass before auto-merge completes.
 - Track each pull request through its lifecycle until it is merged or explicitly closed. Recheck CI, automated reviews, merge conflicts, and auto-merge status after updates; resolve blockers when possible and report the current state. An open PR is ongoing work, not a completed task.
 - Before feature work, update local `main` from `origin/main` and branch from it. After a PR merges, fast-forward local `main` and leave the repository checked out there.

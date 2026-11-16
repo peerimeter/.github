@@ -36,6 +36,9 @@ in a repository.
   repository settings require status checks, resolved review conversations, and
   branches to be up to date before merging; then enable auto-merge immediately.
   Let branch protection and any required approvals gate the merge.
+- Enable the repository setting **Always suggest updating pull request
+  branches** (`allow_update_branch`) so GitHub offers to update PR branches from
+  the latest base branch.
 - Inspect automated review feedback on every current PR head, fix valid findings,
   and resolve every review conversation before the PR can merge. Recheck feedback
   after pushing; required checks, conversation resolution, and branch freshness
