@@ -5,9 +5,9 @@
 ## Current status
 
 - **Active work:** ✅ Phases 0–2 complete; 🔄 Phases 3–5 in progress.
-- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 5 has a separate React/Vite dashboard with API-key login, network creation/listing, peer display/editing, and cross-platform join commands. Dashboard PR #1 and service PR #10 now include the review fixes; local checks and independent review pass, while hosted CI and CodeRabbit are running.
+- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 5's React/Vite dashboard with API-key login, network creation/listing, peer display/editing, and cross-platform join commands merged in dashboard PR #1 (`7ceec62`). Service PR #10 merged at `fa3f370`, adding configured CORS, network-wide peer listing, local development URLs, and the environment-controlled HTTPS requirement. Local Go tests/build/vet and hosted CI passed; independent review found no blockers.
 - **Repositories:** `peerimeter-agent` (Phases 0–2 and managed join); `peerimeter-service` (Phase 3 onward); `peerimeter-dashboard` (Phase 5 UI). Three independent Git repositories plus this shared `.github` documentation/configuration repository.
-- **Next action:** Complete dashboard PR #1 and service PR #10 review/CI, then continue managed join and runtime sync in small increments.
+- **Next action:** Continue managed join and runtime sync in small increments; Phase 5 GitHub SSO and production-hosting documentation remain future work.
 
 The phase numbering below supersedes historical entries: agent self-update is now
 Phase 2, and the former control-plane through release-hardening phases move to
@@ -84,8 +84,8 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `091bd40` (Phase 1); `8a6fb0d` (verified Phase 2, [PR #39](https://github.com/peerimeter/peerimeter-agent/pull/39)); discovery PR #51 head `444a952` | 🔄 Managed join and peer reconciliation | At previous discovery head, hosted Linux/Windows build and integration jobs passed. The review found five issues, fixed at `444a952`; current-head hosted CI and CodeRabbit review are running. Local full test/lint/build and Windows amd64/macOS arm64 cross-builds passed with Go 1.27.3 and `CGO_ENABLED=0`; hosted CI uses Go 1.27.4 |
-| `peerimeter-service` | `b2fba5e` (PR #2 merge); PR #10 head `6d1fc6c` | 🔄 Network API, node registration and peer discovery | Local `make test`, `make build`, `go vet ./...` pass on `6d1fc6c`; hosted `verify`, `action-lock` and CodeRabbit are rerunning after the CORS cache-header fix. PR #10 enables configured dashboard CORS and adds the authenticated network-wide peer listing route. |
-| `peerimeter-dashboard` | PR #1 head `c9aeeef` | 🔄 API-key dashboard UI | Local Vitest (11), Playwright E2E (2), TypeScript, Vite build and `git diff --check` pass. Hosted `check`, Cloudflare Pages build and CodeRabbit are pending. |
+| `peerimeter-service` | `fa3f370` (PR #10 merge) | 🔄 Network API, node registration and peer discovery | PR #10 merged after local `make test`, `make build`, `go vet ./...`, hosted `verify`, `action-lock`, aggregate `check`, and independent review passed. The optional Cloudflare production build ran against `main` before the dashboard merge and failed because that branch still lacked the app's `package.json`; rerun the production deployment from the merged dashboard source. |
+| `peerimeter-dashboard` | `7ceec62` (PR #1 merge) | 🔄 API-key dashboard UI | Local Vitest (11), Playwright E2E (2), TypeScript and Vite build passed; hosted `check` and CodeRabbit passed. Its Pages/Workers production build ran against `main` before PR #1 merged and failed because the app files were not on `main` yet. |
 
 ## Completed work
 
