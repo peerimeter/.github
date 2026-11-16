@@ -129,7 +129,9 @@
         <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh
 
 export SERVICE_URL='https://service.example.com'
-read -rsp 'Service API key: ' SERVICE_API_KEY; printf '\n'
+printf 'Service API key: '
+IFS= read -r -s SERVICE_API_KEY
+printf '\n'
 
 # Create a network with a WireGuard address pool.
 curl -fsS "$SERVICE_URL/api/v1/networks" \
