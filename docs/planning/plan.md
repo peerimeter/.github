@@ -719,9 +719,14 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 ### Phase 4 — STUN, direct NAT traversal, self-healing (critical path)
 - [ ] Validate STUN socket mapping versus actual WG source port on every relevant backend.
 - [ ] Discover each agent's LAN/private-underlay addresses separately from its WireGuard tunnel addresses; exchange and select reachable same-LAN addresses as direct peer endpoints, with tests proving same-network peers use their internal addresses when available.
-- [ ] Implement public/relay candidate discovery and exchange, dynamic endpoint updates, network events, health probes and recoverable state machine.
+- [ ] Agents register their WireGuard public key and primary physical interface addresses; persist each node's registration/configuration as its own service-side YAML file. Never upload private keys.
+- [ ] Exchange public endpoint candidates and coordinate bounded, simultaneous UDP hole-punch attempts; apply selected endpoints to the existing WireGuard session without exposing tunnel traffic to the service.
+- [ ] Select only the primary physical ethernet/Wi-Fi interface for local CIDR reporting; exclude loopback, virtual/tunnel, container, and secondary interfaces. Do not treat a shared public IP or overlapping RFC1918 prefix as proof of reachability.
+- [ ] Implement endpoint candidate discovery/exchange, dynamic endpoint updates, network events, health probes and recoverable state machine.
 - [ ] Test public IP/port changes, packet loss, sleep/wake, control-plane outages and failed direct connections.
 - [ ] Keep **no relay** policy; report unsupported NAT/firewall cases transparently.
+
+**Phase 3/4 user-prioritized increment (2026-11-16):** complete automatic node registration and peer exchange alongside direct UDP hole punching. Agents report only their primary physical ethernet/Wi-Fi interface's addresses/CIDRs. Store each node configuration separately as YAML on the service. Preserve the API-free static mode. Hole punching is best-effort and direct-only; symmetric NAT and UDP-blocking firewalls remain unsupported and must be reported, never silently relayed.
 
 **Done when:** same-LAN peers can discover and use reachable internal endpoints, and documented public-IP/port-change scenarios recover autonomously where direct connectivity is feasible.
 

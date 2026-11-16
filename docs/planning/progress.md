@@ -360,6 +360,53 @@ remain outside the completed self-update scope.
 
 ## Phase 3 service start — 2026-11-16
 
+### User-prioritized automatic discovery increment — started 2026-11-16
+
+The requested scope combines managed node registration/peer exchange from
+Phase 3 with direct UDP hole punching and primary-interface-only address
+reporting from Phase 4. Relay/TURN remains out of scope. Current work branches
+are `feat/agent-discovery` in `peerimeter-service` and `peerimeter-agent`, plus
+`docs/agent-discovery-phase` here. The first service slice stores node documents
+as independent mode-0600 YAML files and adds a versioned peer-list route; the
+agent service API client can decode that peer-list response. Service unit tests
+and vet pass with `CGO_ENABLED=0`; the agent service API package tests pass.
+
+The user specified that the WireGuard address pool comes from a service network
+resource created through the API. The service now has network `POST`/`GET` and
+list routes for private IPv4 CIDRs, a node-registration route that allocates an
+unused tunnel address atomically, and peer document listing. The agent model
+accepts optional `network.cidr`; its API client can read network metadata and
+register a node. A standard-library helper selects the interface carrying the
+default route and chooses a peer LAN address only when the reported CIDRs
+overlap.
+
+The agent now has a foreground `join` command that generates/stores a protected
+key, reports the selected underlay and an initial STUN mapping, registers the
+node, builds its config from the service-allocated address and peer list, then
+polls/reconciles peers every 15 seconds. It uses direct WireGuard handshakes
+and keepalive only; there is no TURN/relay. Full agent and service unit checks
+pass with `CGO_ENABLED=0`; Windows amd64 and macOS arm64 agent cross-builds
+pass. Local Go is 1.27.3, while CI pins 1.27.4. Native tunnel/NAT integration
+could not run in this Termux environment because it has no `sudo` or root
+network privileges.
+
+An independent diff review found and the implementation fixed unsafe path IDs
+in node-file persistence and incomplete peer-list response validation. The
+follow-up review confirmed those fixes; a direct YAML dependency issue was
+corrected with `go mod tidy`. Regression tests cover invalid IDs, legacy
+node-file migration, and malformed peer documents. The reviewed object was the
+uncommitted working diff, so no reviewed commit SHA is recorded.
+
+An independent review of the current diff found no blocking issue. It confirmed
+the config/registration storage separation, serialized non-overlapping CIDR
+allocation, join key handling and best-effort direct-only traversal claims.
+Remaining limitations are the service-wide reusable API token (no per-device
+enrollment or revocation), stale registration cleanup (no `leave` API), and
+public STUN mappings captured only at join time (no same-socket remapping while
+WireGuard owns the port). A VPN default route may cause safe discovery failure.
+Native LAN/NAT traversal and network-change recovery are still unverified, so
+the overall Phase 3/4 milestone remains in progress and is not marked complete.
+
 Created the independent public [`peerimeter-service`](https://github.com/peerimeter/peerimeter-service)
 repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`,
 updated with the toolchain pin at `662c4c442a4b43b9889fbfe0e6850ebef9df6182`,
