@@ -389,7 +389,7 @@ protection configured, so auto-merge remains disabled. Phase 3 is in progress;
 agent enrollment/sync, scoped credentials, PostgreSQL/MQTT, host-file DNS and
 independent phase review remain outstanding.
 
-Updated the shared guidance to require explicit Action release tags, a generated
-`actions.lock`, and CI verification, and to keep the service Go declaration at
-`go 1.27`. Those shared-repository changes are being prepared separately from
-service PR #1.
+Shared guidance and this tracker update are in
+[`.github` PR #13](https://github.com/peerimeter/.github/pull/13), separate from
+service PR #1. That PR records the `go 1.27` service rule and the required
+generated Action lock/CI verification workflow.
