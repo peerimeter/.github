@@ -27,12 +27,45 @@ Configure a strong `PEERIMETER_API_KEY` on the service and set
 that API URL and the same shared key; anyone with the bundle can administer all
 networks, so distribute it only to the machines you trust.
 
+**Preview build required for now:** the network API and `join` command are in
+[service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7) and
+[agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51). Until
+those changes are merged and released, the current stable service and agent
+installer do not support the commands below. To try them from source, check out
+each PR head and build/run it on the target host:
+
+```sh
+git clone https://github.com/peerimeter/peerimeter-service.git
+cd peerimeter-service
+git fetch origin pull/7/head:discovery-preview
+git switch discovery-preview
+read -rsp "Set service API key: " PEERIMETER_API_KEY; printf '\n'; export PEERIMETER_API_KEY
+export PEERIMETER_PUBLIC_API_URL='https://service.example.com'
+export PEERIMETER_DATA_FILE="$PWD/peerimeter-config.json"
+export PEERIMETER_LISTEN_ADDR=127.0.0.1
+export PORT=8080
+go run ./cmd/peerimeter-service
+```
+
+Keep the service running behind a trusted HTTPS reverse proxy, then use a
+separate terminal for the remaining commands. Build the agent on each machine
+where it will run:
+
+```sh
+git clone https://github.com/peerimeter/peerimeter-agent.git
+cd peerimeter-agent
+git fetch origin pull/51/head:discovery-preview
+git switch discovery-preview
+mkdir -p bin
+go build -o bin/peerimeter-agent ./cmd/peerimeter-agent
+```
+
 Create a WireGuard address pool through the API. Pick a private CIDR that does
 not overlap the networks your machines already use:
 
 ```sh
 export SERVICE_URL="https://service.example.com"
-export SERVICE_API_KEY="<the PEERIMETER_API_KEY configured on the service>"
+read -rsp "Service API key: " SERVICE_API_KEY; printf '\n'
 
 curl -fsS "$SERVICE_URL/api/v1/networks" \
   -H "Authorization: Bearer $SERVICE_API_KEY" \
@@ -40,34 +73,59 @@ curl -fsS "$SERVICE_URL/api/v1/networks" \
   -d '{"version":1,"id":"home","name":"Home","cidr":"10.90.0.0/24"}'
 ```
 
-Fetch the join bundle and save its `token` field to a protected file. `jq` is
-used here to extract the field from the JSON response:
+Fetch the join bundle and save its `token` field directly into a root-owned
+file. `umask 077` protects it before writing; `set -C` refuses to overwrite an
+existing token file:
 
 ```sh
 curl -fsS "$SERVICE_URL/api/v1/join-bundle" \
   -H "Authorization: Bearer $SERVICE_API_KEY" \
-  | jq -r '.token' > join-token.txt
-chmod 600 join-token.txt
+  | jq -er '.token' \
+  | sudo sh -c 'umask 077; set -C; cat > /tmp/peerimeter-join-token'
 ```
 
-Install `peerimeter-agent` on each machine using the [agent installation
-instructions](https://github.com/peerimeter/peerimeter-agent#release-installation),
-then copy `join-token.txt` to each machine over a trusted channel. Join once
-per machine, using the same network ID and a unique node ID:
+The example uses `jq` to extract the JSON field. Repeat the authenticated
+request on each trusted Linux/macOS node, or transfer the token over a trusted
+channel and create the destination file as root with mode `0600`. Join once per
+machine, using the same network ID and a unique node ID:
 
 ```sh
-sudo peerimeter-agent join \
-  --token-file "$HOME/join-token.txt" \
+sudo ./bin/peerimeter-agent join \
+  --token-file /tmp/peerimeter-join-token \
   --network-id home \
   --node-id workstation-a
 ```
 
-On Windows, run an elevated PowerShell and use a token file whose ACL grants
-access only to the current user, SYSTEM, and Administrators:
+On Windows, build the agent from the PR head above. Run elevated PowerShell.
+Create the token file, restrict its ACL before writing the credential, then
+join:
 
 ```powershell
-peerimeter-agent.exe join `
-  --token-file "$env:USERPROFILE\join-token.txt" `
+git clone https://github.com/peerimeter/peerimeter-agent.git
+Set-Location peerimeter-agent
+git fetch origin pull/51/head:discovery-preview
+git switch discovery-preview
+New-Item -ItemType Directory -Force bin | Out-Null
+$ServiceUrl = 'https://service.example.com'
+$SecureKey = Read-Host 'Service API key' -AsSecureString
+$ServiceApiKey = [System.Net.NetworkCredential]::new('', $SecureKey).Password
+Invoke-RestMethod "$ServiceUrl/api/v1/networks" -Method Post `
+  -Headers @{ Authorization = "Bearer $ServiceApiKey" } `
+  -ContentType 'application/json' `
+  -Body '{"version":1,"id":"home","name":"Home","cidr":"10.90.0.0/24"}'
+$tokenPath = "$env:ProgramData\Peerimeter\join-token.txt"
+New-Item -ItemType Directory -Force (Split-Path $tokenPath) | Out-Null
+if (Test-Path $tokenPath) { throw "Token file already exists: $tokenPath" }
+New-Item -ItemType File $tokenPath | Out-Null
+icacls $tokenPath /inheritance:r /grant:r `
+  "$($env:USERDOMAIN)\$($env:USERNAME):(F)" `
+  "NT AUTHORITY\SYSTEM:(F)" "BUILTIN\Administrators:(F)"
+$bundle = Invoke-RestMethod "$ServiceUrl/api/v1/join-bundle" `
+  -Headers @{ Authorization = "Bearer $ServiceApiKey" }
+[System.IO.File]::WriteAllText($tokenPath, $bundle.token)
+go build -o bin/peerimeter-agent.exe ./cmd/peerimeter-agent
+./bin/peerimeter-agent.exe join `
+  --token-file $tokenPath `
   --network-id home `
   --node-id workstation-a
 ```
