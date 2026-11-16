@@ -82,7 +82,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
-| `peerimeter-agent` | `091bd40` (accepted Phase 1); discovery PR #51 head `444a952` | 🔄 Managed join and peer reconciliation | At previous discovery head, hosted Linux/Windows build and integration jobs passed. The review found five issues, fixed at `444a952`; current-head hosted CI and CodeRabbit review are running. Local full test/lint/build and Windows amd64/macOS arm64 cross-builds passed with Go 1.27.3 and `CGO_ENABLED=0`; hosted CI uses Go 1.27.4 |
+| `peerimeter-agent` | `091bd40` (Phase 1); `8a6fb0d` (verified Phase 2, [PR #39](https://github.com/peerimeter/peerimeter-agent/pull/39)); discovery PR #51 head `444a952` | 🔄 Managed join and peer reconciliation | At previous discovery head, hosted Linux/Windows build and integration jobs passed. The review found five issues, fixed at `444a952`; current-head hosted CI and CodeRabbit review are running. Local full test/lint/build and Windows amd64/macOS arm64 cross-builds passed with Go 1.27.3 and `CGO_ENABLED=0`; hosted CI uses Go 1.27.4 |
 | `peerimeter-service` | `b2fba5e` (PR #2 merge); discovery PR #7 head `79593f9` | 🔄 Network API, node registration and peer discovery | Discovery PR `verify`, `action-lock` and aggregate `check` pass on `79593f9`; CodeRabbit review is pending. Main run `43844562558` passed all jobs, generated release `v0.1.0`, and pushed amd64/arm64 GHCR tags |
 
 ## Completed work
