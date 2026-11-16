@@ -4,10 +4,10 @@
 
 ## Current status
 
-- **Active work:** ✅ Phase 0 complete; ✅ Phase 1 complete; ✅ Phase 2 agent self-update complete; ⬜ Phase 3 service/control plane not started.
-- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. PR #37, #38 and #39 are merged; exact commits and run links are recorded below.
-- **Repositories:** `peerimeter-agent` (Phases 0–2, complete); `peerimeter-service` (Phase 3 onward, not started). Two independent Git repositories.
-- **Next action:** Verify the published v0.17.0 installation path when requested, then begin Phase 3 only when requested. No service/control-plane work has started.
+- **Active work:** ✅ Phase 0 complete; ✅ Phase 1 complete; ✅ Phase 2 agent self-update complete; 🔄 Phase 3 service/control plane in progress.
+- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 3 service PR #1 adds the first API/storage slice; its hosted CI and review are pending.
+- **Repositories:** `peerimeter-agent` (Phases 0–2, complete); `peerimeter-service` (Phase 3 onward, in progress). Two independent Git repositories.
+- **Next action:** Complete review and hosted checks for service PR #1, then integrate the agent's managed join and config sync in small increments.
 
 The phase numbering below supersedes historical entries: agent self-update is now
 Phase 2, and the former control-plane through release-hardening phases move to
@@ -26,7 +26,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/`wg show` belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
-| 3 — Server + join bundles + sync | ⬜ Not started | Includes managed peer host-file entries with configurable `$hostName.$networkName` naming |
+| 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage in service PR #1; join token currently carries the shared static key. Agent integration, scoped enrollment, PostgreSQL/MQTT and host-file DNS remain outstanding |
 | 4 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
 | 5 — Browser dashboard + GitHub SSO | ⬜ Not started | |
 | 6 — External WireGuard client gateway | ⬜ Not started | |
@@ -36,7 +36,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 ## Two-repository checklist
 
 - [x] `peerimeter-agent` initialized with independent `.git`, `go.mod`, and CI.
-- [ ] `peerimeter-service` initialized separately at Phase 3 with independent `.git`, `go.mod`, and CI.
+- [x] `peerimeter-service` initialized separately at Phase 3 with independent `.git`, `go.mod`, and CI workflow (PR #1 hosted results pending).
 - [ ] Cross-repo versioned HTTP/JSON and MQTT contracts defined and tested without relative module imports.
 - [ ] Record tested commit hash and status for each repository.
 
@@ -55,7 +55,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - [x] `peerimeter-agent/.github/workflows/connectivity-e2e.yml` exists as a manual entry point and reports a blocked result until a mixed-OS/NAT topology is provisioned; no connectivity pass is claimed.
 - [x] macOS/Windows GitHub-hosted tunnel feasibility checked: both passed on the exact target images; no self-hosted fallback currently needed.
 - [x] All integration skips and missing infrastructure are reported explicitly, never as a pass; agent E2E remains unavailable and manual E2E workflow fails with a blocked explanation.
-- [ ] `peerimeter-service` independent CI added at Phase 3.
+- [x] `peerimeter-service` independent CI added at Phase 3; PR #1 `verify`, `action-lock` and aggregate `check` are pending hosted runner results.
 
 ## Additional requirements checklist
 
@@ -83,7 +83,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `8a6fb0d` (progress UX merged); `1f7a1fc` (confirmation and native updater CI); `091bd40` (accepted Phase 1) | ✅ Phase 2 complete | Native build/tests, installed-binary E2E, WireGuard integration, all package targets and CodeRabbit review passed |
-| `peerimeter-service` | None | Not started; Phase 3 begins when requested | Not run |
+| `peerimeter-service` | `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build and action-lock passed; hosted CI pending; local race/Docker unavailable |
 
 ## Completed work
 
@@ -357,3 +357,39 @@ installed-binary E2E test runs in native CI with its opt-in environment enabled;
 it skips by default in a local `go test ./...` invocation. These results do not
 provide mixed-OS/NAT connectivity evidence or constitute a public release; those
 remain outside the completed self-update scope.
+
+## Phase 3 service start — 2026-11-16
+
+Created the independent public [`peerimeter-service`](https://github.com/peerimeter/peerimeter-service)
+repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`
+is under [PR #1](https://github.com/peerimeter/peerimeter-service/pull/1).
+It adds a chi v5 API with versioned network/node JSON `GET`/`PUT`, a Base64URL
+v1 join bundle, Bearer API-key authentication, serialized in-memory writes to
+an atomically replaced mode-0600 JSON file, structured logs and graceful HTTP
+shutdown. The static API key is intentionally the join bundle's
+`enrollment_token`; it is reusable, global, and has no per-agent scope or expiry.
+TLS must terminate at a trusted proxy. This does not satisfy one-time scoped
+enrollment from the long-term plan.
+
+The service Dockerfile is multi-stage and non-root. Its version-tag workflow
+tests/builds the service and image, verifies `.github/workflows/actions.lock`,
+and publishes `linux/amd64` and `linux/arm64` images to GHCR after valid
+`vX.Y.Z` tags. Current Actions use explicit release tags whose immutable SHAs
+are recorded in the generated lock. The service module declares only `go 1.27`;
+CI and the container builder use the Go 1.27 line, with no `.go-version` file.
+
+Local validation at that exact commit used Go 1.27.3 on Linux ARM64 with
+`CGO_ENABLED=0`: `go test -count=1 ./...`, `go vet ./...`, `go build`,
+`gh actions-lock --verify`, and `git diff --check` passed. The local environment
+has no C compiler or Docker engine, so race tests and a container build have not
+run locally. Hosted PR checks are pending at
+[`run 43790251718`](https://github.com/peerimeter/peerimeter-service/actions/runs/43790251718).
+The PR has no requested reviews yet. The service repository has no branch
+protection configured, so auto-merge remains disabled. Phase 3 is in progress;
+agent enrollment/sync, scoped credentials, PostgreSQL/MQTT, host-file DNS and
+independent phase review remain outstanding.
+
+Updated the shared guidance to require explicit Action release tags, a generated
+`actions.lock`, and CI verification, and to keep the service Go declaration at
+`go 1.27`. Those shared-repository changes are being prepared separately from
+service PR #1.
