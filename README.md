@@ -27,18 +27,17 @@ Configure a strong `PEERIMETER_API_KEY` on the service and set
 that API URL and the same shared key; anyone with the bundle can administer all
 networks, so distribute it only to the machines you trust.
 
-**Preview build required for now:** the network API and `join` command are in
+**Version requirement:** the network API and `join` command are under review in
 [service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7) and
-[agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51). Until
-those changes are merged and released, the current stable service and agent
-installer do not support the commands below. To try them from source, check out
-each PR head and build/run it on the target host:
+[agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51). The
+current `main` branches and stable releases do not include these features yet.
+Wait until both changes are merged to `main` (or use releases built from those
+main commits) before running this setup. The commands below use `main`:
 
 ```sh
 git clone https://github.com/peerimeter/peerimeter-service.git
 cd peerimeter-service
-git fetch origin pull/7/head:discovery-preview
-git switch discovery-preview
+git switch main
 read -rsp "Set service API key: " PEERIMETER_API_KEY; printf '\n'; export PEERIMETER_API_KEY
 export PEERIMETER_PUBLIC_API_URL='https://service.example.com'
 export PEERIMETER_DATA_FILE="$PWD/peerimeter-config.json"
@@ -54,8 +53,7 @@ where it will run:
 ```sh
 git clone https://github.com/peerimeter/peerimeter-agent.git
 cd peerimeter-agent
-git fetch origin pull/51/head:discovery-preview
-git switch discovery-preview
+git switch main
 mkdir -p bin
 go build -o bin/peerimeter-agent ./cmd/peerimeter-agent
 ```
@@ -96,15 +94,15 @@ sudo ./bin/peerimeter-agent join \
   --node-id workstation-a
 ```
 
-On Windows, build the agent from the PR head above. Run elevated PowerShell.
+On Windows, build the agent from `main` after the `join` command has merged.
+Run elevated PowerShell.
 Create the token file, restrict its ACL before writing the credential, then
 join:
 
 ```powershell
 git clone https://github.com/peerimeter/peerimeter-agent.git
 Set-Location peerimeter-agent
-git fetch origin pull/51/head:discovery-preview
-git switch discovery-preview
+git switch main
 New-Item -ItemType Directory -Force bin | Out-Null
 $ServiceUrl = 'https://service.example.com'
 $SecureKey = Read-Host 'Service API key' -AsSecureString
