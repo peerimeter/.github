@@ -27,35 +27,29 @@ Configure a strong `PEERIMETER_API_KEY` on the service and set
 that API URL and the same shared key; anyone with the bundle can administer all
 networks, so distribute it only to the machines you trust.
 
-**Version requirement:** the network API and `join` command are under review in
-[service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7) and
-[agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51). The
-current `main` branches and stable releases do not include these features yet.
-Wait until both changes are merged to `main` (or use releases built from those
-main commits) before running this setup. The commands below use `main`:
+Run the latest service image published to GHCR. The `latest` tag tracks
+versioned releases from `main`:
 
 ```sh
-git clone https://github.com/peerimeter/peerimeter-service.git
-cd peerimeter-service
-git switch main
 read -rsp "Set service API key: " PEERIMETER_API_KEY; printf '\n'; export PEERIMETER_API_KEY
 export PEERIMETER_PUBLIC_API_URL='https://service.example.com'
-export PEERIMETER_DATA_FILE="$PWD/peerimeter-config.json"
-export PEERIMETER_LISTEN_ADDR=127.0.0.1
-export PORT=8080
-go run ./cmd/peerimeter-service
+docker pull ghcr.io/peerimeter/peerimeter-service:latest
+docker volume create peerimeter-data
+docker run -d --name peerimeter-service --restart unless-stopped \
+  --publish 127.0.0.1:8080:8080 \
+  --env PEERIMETER_API_KEY \
+  --env PEERIMETER_PUBLIC_API_URL \
+  --volume peerimeter-data:/var/lib/peerimeter \
+  ghcr.io/peerimeter/peerimeter-service:latest
 ```
 
-Keep the service running behind a trusted HTTPS reverse proxy, then use a
-separate terminal for the remaining commands. Build the agent on each machine
-where it will run:
+Keep the service behind a trusted HTTPS reverse proxy. Its container listens
+on the host loopback at port 8080, and the named Docker volume persists the
+network and node data. Install the agent on each machine where it will run.
 
 ```sh
-git clone https://github.com/peerimeter/peerimeter-agent.git
-cd peerimeter-agent
-git switch main
-mkdir -p bin
-go build -o bin/peerimeter-agent ./cmd/peerimeter-agent
+# Linux/macOS: install the latest released agent.
+curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh
 ```
 
 Create a WireGuard address pool through the API. Pick a private CIDR that does
@@ -88,22 +82,17 @@ channel and create the destination file as root with mode `0600`. Join once per
 machine, using the same network ID and a unique node ID:
 
 ```sh
-sudo ./bin/peerimeter-agent join \
+sudo peerimeter-agent join \
   --token-file /tmp/peerimeter-join-token \
   --network-id home \
   --node-id workstation-a
 ```
 
-On Windows, build the agent from `main` after the `join` command has merged.
-Run elevated PowerShell.
-Create the token file, restrict its ACL before writing the credential, then
-join:
+On Windows, run elevated PowerShell to install the latest released agent,
+create the protected token file, then join:
 
 ```powershell
-git clone https://github.com/peerimeter/peerimeter-agent.git
-Set-Location peerimeter-agent
-git switch main
-New-Item -ItemType Directory -Force bin | Out-Null
+irm https://agent.peerimeter.app/install.ps1 | iex
 $ServiceUrl = 'https://service.example.com'
 $SecureKey = Read-Host 'Service API key' -AsSecureString
 $ServiceApiKey = [System.Net.NetworkCredential]::new('', $SecureKey).Password
@@ -121,8 +110,7 @@ icacls $tokenPath /inheritance:r /grant:r `
 $bundle = Invoke-RestMethod "$ServiceUrl/api/v1/join-bundle" `
   -Headers @{ Authorization = "Bearer $ServiceApiKey" }
 [System.IO.File]::WriteAllText($tokenPath, $bundle.token)
-go build -o bin/peerimeter-agent.exe ./cmd/peerimeter-agent
-./bin/peerimeter-agent.exe join `
+& "$env:ProgramFiles\Peerimeter\peerimeter-agent.exe" join `
   --token-file $tokenPath `
   --network-id home `
   --node-id workstation-a
