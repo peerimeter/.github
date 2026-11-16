@@ -76,9 +76,9 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.53v-2.06c-3.1.68-3.75-1.32-3.75-1.32-.5-1.3-1.24-1.65-1.24-1.65-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 .1.9 2.04 3.63 1.45.1-.72.39-1.22.7-1.5-2.48-.28-5.08-1.24-5.08-5.52 0-1.22.43-2.22 1.15-3-.12-.29-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.67.11 2.96.72.78 1.15 1.78 1.15 3 0 4.29-2.61 5.24-5.1 5.51.4.35.75 1.03.75 2.08V22c0 .29.2.64.77.53A11.1 11.1 0 0 0 12 .9Z"/></svg>
         </summary>
         <nav class="source-links" aria-label="Source repositories">
-          <a href="https://github.com/peerimeter/peerimeter-agent">Peerimeter Agent</a>
-          <a href="https://github.com/peerimeter/peerimeter-service">Peerimeter Service</a>
-          <a href="https://github.com/peerimeter/peerimeter-dashboard">Peerimeter Dashboard</a>
+          <a href="https://github.com/peerimeter/peerimeter-agent">Agent</a>
+          <a href="https://github.com/peerimeter/peerimeter-service">Service</a>
+          <a href="https://github.com/peerimeter/peerimeter-dashboard">Dashboard</a>
           <a href="https://github.com/peerimeter/.github">Docs</a>
         </nav>
       </details>
@@ -94,41 +94,16 @@
       </section>
       <aside class="release-panel" aria-label="Latest releases">
         <div class="release-intro"><div class="release-kicker"><span class="release-dot" aria-hidden="true"></span>Latest releases</div><h2>What’s new</h2><p>Current stable versions from GitHub.</p></div>
-        <a class="release-item" data-release="agent" href="https://github.com/peerimeter/peerimeter-agent/releases/latest"><span class="release-name">Peerimeter Agent</span><span class="release-version"><span data-version>v0.1.0</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
-        <a class="release-item" data-release="service" href="https://github.com/peerimeter/peerimeter-service/releases/latest"><span class="release-name">Peerimeter Service</span><span class="release-version"><span data-version>Checking…</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+        <a class="release-item" data-release="agent" href="https://github.com/peerimeter/peerimeter-agent/releases/latest"><span class="release-name">Agent</span><span class="release-version"><span data-version>v0.1.0</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+        <a class="release-item" data-release="service" href="https://github.com/peerimeter/peerimeter-service/releases/latest"><span class="release-name">Service</span><span class="release-version"><span data-version>Checking…</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
       </aside>
-      <section class="grid" aria-label="Project repositories">
-        <article class="card"><h2><a href="https://github.com/peerimeter/peerimeter-agent">Agent</a></h2><p>Go WireGuard agent for Linux, macOS and Windows. Connects peers directly and can join a service-managed network.</p></article>
-        <article class="card"><h2><a href="https://github.com/peerimeter/peerimeter-service">Service</a></h2><p>Self-hosted API for creating WireGuard networks, registering nodes and sharing peer configuration.</p></article>
-        <article class="card"><h2><a href="https://github.com/peerimeter/peerimeter-dashboard">Dashboard</a></h2><p>Browser UI for managing networks and peers, and preparing agent join commands.</p></article>
+      <section class="hero" style="padding:4px 0 32px">
+        <p class="lead">Peerimeter connects your Linux, macOS and Windows machines in a direct WireGuard mesh. Run the agent on each machine, and use the self-hosted service and dashboard to manage networks and peers.</p>
       </section>
-      <section class="grid" aria-label="Platform support">
-        <article class="card"><h2>Linux</h2><p>Kernel WireGuard and systemd. Install the agent with the shell script.</p></article>
-        <article class="card"><h2>macOS</h2><p>Native utun through the embedded WireGuard backend, managed by launchd.</p></article>
-        <article class="card"><h2>Windows</h2><p>Bundled signed WireGuardNT driver and native Windows Service.</p></article>
-      </section>
-      <section id="install" class="card">
-        <h2>Install Peerimeter Agent</h2>
-        <p class="small">Install with the recommended defaults. The installers verify release checksums.</p>
-        <div class="platform">
-          <h3>Linux</h3>
-          <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh</pre>
-        </div>
-        <div class="platform">
-          <h3>macOS</h3>
-          <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh</pre>
-        </div>
-        <div class="platform">
-          <h3>Windows PowerShell (Run as Administrator)</h3>
-          <pre>irm https://agent.peerimeter.app/install.ps1 | iex</pre>
-        </div>
-      </section>
-      <section id="quick-setup" class="card" style="margin-top:16px">
+      <section id="quick-setup" class="card">
         <h2>Quick setup</h2>
-        <p class="small">Deploy the <a href="https://service.peerimeter.app/">service</a>, then install the agent on Linux or macOS and register it to a network:</p>
-        <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh
-
-export SERVICE_URL='https://service.example.com'
+        <p class="small">Deploy the <a href="https://service.peerimeter.app/">service</a>, create a network, then install the agent below and register each machine:</p>
+        <pre>export SERVICE_URL='https://service.example.com'
 printf 'Service API key: '
 IFS= read -r -s SERVICE_API_KEY
 printf '\n'
@@ -144,6 +119,22 @@ curl -fsS "$SERVICE_URL/api/v1/join-bundle?network_id=home" \
   -H "Authorization: Bearer $SERVICE_API_KEY" \
   | jq -er '.token' | sudo peerimeter-agent join</pre>
         <p class="small">The service uses a shared API key; keep join tokens private. The agent uses the machine hostname as its node ID by default. Read the <a href="https://github.com/peerimeter/.github/blob/main/README.md#quick-setup-register-agents-through-the-service">full setup guide</a> for deployment details and Windows instructions.</p>
+      </section>
+      <section id="install" class="card" style="margin-top:16px">
+        <h2>Install the agent</h2>
+        <p class="small">The installers verify release checksums.</p>
+        <div class="platform">
+          <h3>Linux</h3>
+          <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh</pre>
+        </div>
+        <div class="platform">
+          <h3>macOS</h3>
+          <pre>curl -fsSL https://agent.peerimeter.app/install.sh | sudo sh</pre>
+        </div>
+        <div class="platform">
+          <h3>Windows PowerShell (Run as Administrator)</h3>
+          <pre>irm https://agent.peerimeter.app/install.ps1 | iex</pre>
+        </div>
       </section>
     </main>
     <footer>Peerimeter is open source. <a href="https://github.com/peerimeter">GitHub organization</a> · <a href="https://github.com/peerimeter/.github">Project docs</a> · <a href="https://service.peerimeter.app/">Service setup</a></footer>
