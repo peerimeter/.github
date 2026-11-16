@@ -5,9 +5,9 @@
 ## Current status
 
 - **Active work:** ✅ Phase 0 complete; ✅ Phase 1 complete; ✅ Phase 2 agent self-update complete; 🔄 Phase 3 service/control plane in progress.
-- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 3 service PR #1's Go 1.27.4 test/build/Docker/lock CI passed at the updated head; automated re-review of fixes is pending.
+- **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Service PR #1 merged after Go 1.27.4 test/build/Docker/lock CI passed. Scratch runtime image changes are under service PR #2; its CI and review are pending.
 - **Repositories:** `peerimeter-agent` (Phases 0–2, complete); `peerimeter-service` (Phase 3 onward, in progress). Two independent Git repositories.
-- **Next action:** Complete review and hosted checks for service PR #1, then integrate the agent's managed join and config sync in small increments.
+- **Next action:** Complete CI and review for service PR #2, then integrate the agent's managed join and config sync in small increments.
 
 The phase numbering below supersedes historical entries: agent self-update is now
 Phase 2, and the former control-plane through release-hardening phases move to
@@ -26,7 +26,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/`wg show` belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
-| 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage in service PR #1; join token currently carries the shared static key. Agent integration, scoped enrollment, PostgreSQL/MQTT and host-file DNS remain outstanding |
+| 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage merged in service PR #1; scratch runtime image follow-up in PR #2. Join token currently carries the shared static key. Agent integration, scoped enrollment, PostgreSQL/MQTT and host-file DNS remain outstanding |
 | 4 — NAT traversal + self-healing | ⬜ Not started | Direct connections only; no relay |
 | 5 — Browser dashboard + GitHub SSO | ⬜ Not started | |
 | 6 — External WireGuard client gateway | ⬜ Not started | |
@@ -36,7 +36,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 ## Two-repository checklist
 
 - [x] `peerimeter-agent` initialized with independent `.git`, `go.mod`, and CI.
-- [x] `peerimeter-service` initialized separately at Phase 3 with independent `.git`, `go.mod`, and CI workflow (PR #1 hosted results pending).
+- [x] `peerimeter-service` initialized separately at Phase 3 with independent `.git`, `go.mod`, and CI workflow (initial API merged in PR #1).
 - [ ] Cross-repo versioned HTTP/JSON and MQTT contracts defined and tested without relative module imports.
 - [ ] Record tested commit hash and status for each repository.
 
@@ -83,7 +83,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `8a6fb0d` (progress UX merged); `1f7a1fc` (confirmation and native updater CI); `091bd40` (accepted Phase 1) | ✅ Phase 2 complete | Native build/tests, installed-binary E2E, WireGuard integration, all package targets and CodeRabbit review passed |
-| `peerimeter-service` | `eb96f89fca362f3e48ee1f700af705593bb1c3b9` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build passed; hosted Go 1.27.4 race/tests/vet/build/Docker/action-lock passed at run `43834468132`; CodeRabbit re-review pending |
+| `peerimeter-service` | `0b68ed62453c92f6638e22c1c83855a345891d82` (PR #1 merge) | 🔄 Phase 3; scratch image in PR #2 | Initial API CI passed at run `43834468132`; PR #2 head `d8c594d` changes runtime to scratch and copies CA/passwd/group; hosted CI and CodeRabbit pending |
 
 ## Completed work
 
@@ -364,8 +364,9 @@ Created the independent public [`peerimeter-service`](https://github.com/peerime
 repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`,
 updated with the toolchain pin at `662c4c442a4b43b9889fbfe0e6850ebef9df6182`,
 review fixes at `440c4b563451e825f91368b5c97eb98ee4b66ca2`, and config-ID
-validation at `eb96f89fca362f3e48ee1f700af705593bb1c3b9`, is under
-[PR #1](https://github.com/peerimeter/peerimeter-service/pull/1).
+validation at `eb96f89fca362f3e48ee1f700af705593bb1c3b9`, merged in
+[PR #1](https://github.com/peerimeter/peerimeter-service/pull/1) at
+`0b68ed62453c92f6638e22c1c83855a345891d82`.
 It adds a chi v5 API with versioned network/node JSON `GET`/`PUT`, a Base64URL
 v1 join bundle, Bearer API-key authentication, serialized in-memory writes to
 an atomically replaced mode-0600 JSON file, structured logs and graceful HTTP
@@ -374,7 +375,11 @@ shutdown. The static API key is intentionally the join bundle's
 TLS must terminate at a trusted proxy. This does not satisfy one-time scoped
 enrollment from the long-term plan.
 
-The service Dockerfile is multi-stage and non-root. Its version-tag workflow
+PR #1's Dockerfile uses a multi-stage non-root image. Follow-up
+[PR #2](https://github.com/peerimeter/peerimeter-service/pull/2) switches its
+runtime stage to `scratch`, copies CA certificates and minimal passwd/group
+files for UID/GID 65532, and preserves the writable config directory. Its
+hosted Docker build is pending. The version-tag workflow
 tests/builds the service and image, sets up a Buildx builder for multi-platform
 pushes, verifies `.github/workflows/actions.lock`,
 and publishes `linux/amd64` and `linux/arm64` images to GHCR after valid
@@ -383,14 +388,14 @@ are recorded in the generated lock. The service module declares `go 1.27`,
 while `.go-version` pins the exact development/CI/container toolchain to Go
 1.27.4.
 
-Local validation at the current commit used Go 1.27.3 on Linux ARM64 with
+Local validation of the PR #1 code at `eb96f89` used Go 1.27.3 on Linux ARM64 with
 `CGO_ENABLED=0`: `go test -count=1 ./...`, `go vet ./...`, `go build`,
 `gh actions-lock --verify`, and `git diff --check` passed. The local environment
 has no C compiler or Docker engine, so race tests and a container build have not
 run locally. Invoking the local Go 1.27.4 toolchain segfaults before reporting
 its version; hosted CI uses `.go-version` to install and test with 1.27.4.
 Hosted PR run [`43834468132`](https://github.com/peerimeter/peerimeter-service/actions/runs/43834468132)
-passed: its Ubuntu runner installed Go 1.27.4 from `.go-version`, then passed
+passed on PR #1: its Ubuntu runner installed Go 1.27.4 from `.go-version`, then passed
 format, vet, race/tests, binary build, Docker build, action-lock verification
 and aggregate `check`. CodeRabbit's Buildx and shutdown findings were fixed at
 `440c4b5`. A later review found that empty node IDs could overwrite network
@@ -398,18 +403,19 @@ config and asked to document exact version tags; both were fixed at `eb96f89`,
 along with disabling checkout credential persistence. Review of this head is
 pending. The service `main` branch now mirrors the agent's protections: strict
 `check` and CodeRabbit requirements, resolved review conversations, linear
-history, and no force-push or deletion. Repository auto-merge is enabled and
-PR #1 is waiting on its current CodeRabbit status. Phase 3 remains in progress;
+history, and no force-push or deletion. Repository auto-merge is enabled. PR #1
+merged after its current CodeRabbit review passed; PR #2 has auto-merge enabled
+and awaits its required checks and CodeRabbit review. Phase 3 remains in progress;
 agent enrollment/sync, scoped credentials, PostgreSQL/MQTT, host-file DNS and
 independent phase review remain outstanding.
 
-Shared guidance and this tracker update are in
+Shared guidance and tracker changes are in
 [`.github` PR #13](https://github.com/peerimeter/.github/pull/13), separate from
-service PR #1. That PR records the `go 1.27` module directive, exact
+the service repository. PR #13 records the `go 1.27` module directive, exact
 `.go-version` pin, and required generated Action lock/CI verification workflow.
 PR #13 passed its required CodeRabbit status and auto-merged at
 `76cde408f29631516ed16a64a9dfe1ea188181a9`; its review's earlier CI-pending
-finding was corrected before the merge. Service PR #1 remains open with all
-hosted CI gates passing. The service `main` protections were applied through the
-GitHub API and match the agent branch rules. Auto-merge is enabled at repo and
-PR level; PR #1 is waiting for its current CodeRabbit check.
+finding was corrected before the merge. Service PR #1 merged at
+`0b68ed62453c92f6638e22c1c83855a345891d82`; PR #2 carries the scratch-runtime
+follow-up. The service `main` protections were applied through the GitHub API
+and match the agent branch rules. Auto-merge is enabled at repo and PR level.
