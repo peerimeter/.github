@@ -378,7 +378,9 @@ unused tunnel address atomically, and peer document listing. The agent model
 accepts optional `network.cidr`; its API client can read network metadata and
 register a node. A standard-library helper selects the interface carrying the
 default route and chooses a peer LAN address only when the reported CIDRs
-overlap.
+overlap. RFC1918 CIDR overlap alone does not prove that two nodes share a
+reachable LAN; when an overlapping but unreachable LAN candidate is selected,
+the agent currently has no automatic public-endpoint fallback.
 
 The agent now has a foreground `join` command that generates/stores a protected
 key, reports the selected underlay and an initial STUN mapping, registers the
@@ -405,7 +407,10 @@ allocation, join key handling and best-effort direct-only traversal claims.
 Remaining limitations are the service-wide reusable API token (no per-device
 enrollment or revocation), stale registration cleanup (no `leave` API), and
 public STUN mappings captured only at join time (no same-socket remapping while
-WireGuard owns the port). A VPN default route may cause safe discovery failure.
+WireGuard owns the port). The join-time STUN probe runs before WireGuard starts,
+so it does not verify the mapping for the WireGuard socket; the advertised
+mapping may be unusable. Same-socket validation in plan section 8 remains open.
+A VPN default route may cause safe discovery failure.
 Native LAN/NAT traversal and network-change recovery are still unverified, so
 the overall Phase 3/4 milestone remains in progress and is not marked complete.
 
@@ -416,8 +421,10 @@ in a test, fixed in the follow-up commit below and passed locally without race
 instrumentation; agent
 `CGO_ENABLED=0 make lint`, `make test`, `make build`, Windows amd64 and macOS
 arm64 cross-builds; and `git diff --check` in all three repositories. The
-Termux host has Go 1.27.3; CI is pinned to 1.27.4. No hosted checks have run
-for these branches yet.
+Termux host has Go 1.27.3; CI is pinned to 1.27.4. Hosted service checks pass
+on the corrected head; agent Linux/Windows jobs pass while macOS jobs and
+CodeRabbit reviews are still running. The docs PR review requested these status
+and limitation clarifications; the current head includes the fixes.
 
 Implementation commits: service
 [`79593f9`](https://github.com/peerimeter/peerimeter-service/commit/79593f91c0739a339beea8215eb96b57d25defac),
