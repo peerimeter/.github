@@ -65,31 +65,24 @@ curl -fsS "$SERVICE_URL/api/v1/networks" \
   -d '{"version":1,"id":"home","name":"Home","cidr":"10.90.0.0/24"}'
 ```
 
-Fetch the join bundle and save its `token` field directly into a root-owned
-file. `umask 077` protects it before writing; `set -C` refuses to overwrite an
-existing token file:
+Fetch a join token for the network and pipe it directly to the agent. The token
+carries the network ID; its shared API credential still grants access to all
+networks and nodes. The agent uses the hostname as node ID unless you pass
+`--node-id`:
 
 ```sh
-curl -fsS "$SERVICE_URL/api/v1/join-bundle" \
+curl -fsS "$SERVICE_URL/api/v1/join-bundle?network_id=home" \
   -H "Authorization: Bearer $SERVICE_API_KEY" \
   | jq -er '.token' \
-  | sudo sh -c 'umask 077; set -C; cat > /tmp/peerimeter-join-token'
+  | sudo peerimeter-agent join
 ```
 
 The example uses `jq` to extract the JSON field. Repeat the authenticated
-request on each trusted Linux/macOS node, or transfer the token over a trusted
-channel and create the destination file as root with mode `0600`. Join once per
-machine, using the same network ID and a unique node ID:
-
-```sh
-sudo peerimeter-agent join \
-  --token-file /tmp/peerimeter-join-token \
-  --network-id home \
-  --node-id workstation-a
-```
+request on each trusted Linux/macOS node. Set `--node-id workstation-a` if you
+want a stable custom node ID instead of the hostname.
 
 On Windows, run elevated PowerShell to install the latest released agent,
-create the protected token file, then join:
+then pipe the token to `join`:
 
 ```powershell
 irm https://agent.peerimeter.app/install.ps1 | iex
@@ -100,26 +93,16 @@ Invoke-RestMethod "$ServiceUrl/api/v1/networks" -Method Post `
   -Headers @{ Authorization = "Bearer $ServiceApiKey" } `
   -ContentType 'application/json' `
   -Body '{"version":1,"id":"home","name":"Home","cidr":"10.90.0.0/24"}'
-$tokenPath = "$env:ProgramData\Peerimeter\join-token.txt"
-New-Item -ItemType Directory -Force (Split-Path $tokenPath) | Out-Null
-if (Test-Path $tokenPath) { throw "Token file already exists: $tokenPath" }
-New-Item -ItemType File $tokenPath | Out-Null
-icacls $tokenPath /inheritance:r /grant:r `
-  "$($env:USERDOMAIN)\$($env:USERNAME):(F)" `
-  "NT AUTHORITY\SYSTEM:(F)" "BUILTIN\Administrators:(F)"
-$bundle = Invoke-RestMethod "$ServiceUrl/api/v1/join-bundle" `
+$bundle = Invoke-RestMethod "$ServiceUrl/api/v1/join-bundle?network_id=home" `
   -Headers @{ Authorization = "Bearer $ServiceApiKey" }
-[System.IO.File]::WriteAllText($tokenPath, $bundle.token)
-& "$env:ProgramFiles\Peerimeter\peerimeter-agent.exe" join `
-  --token-file $tokenPath `
-  --network-id home `
-  --node-id workstation-a
+$bundle.token | & "$env:ProgramFiles\Peerimeter\peerimeter-agent.exe" join
 ```
 
 `join` creates and protects a WireGuard key, registers only its public key and
 the selected primary physical interface's addresses, receives its tunnel
 address from the service, and fetches peers every 15 seconds. Keep the command
-running in the foreground. Repeat it on each node with a different `--node-id`.
+running in the foreground. Repeat it on each node; hostname is used as node ID
+unless you set `--node-id`.
 The agent chooses an overlapping LAN address when available and otherwise uses
 the peer's discovered public UDP endpoint. A subnet match does not guarantee
 that the machines can reach each other; NAT and firewall limitations may still
