@@ -55,7 +55,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 - [x] `peerimeter-agent/.github/workflows/connectivity-e2e.yml` exists as a manual entry point and reports a blocked result until a mixed-OS/NAT topology is provisioned; no connectivity pass is claimed.
 - [x] macOS/Windows GitHub-hosted tunnel feasibility checked: both passed on the exact target images; no self-hosted fallback currently needed.
 - [x] All integration skips and missing infrastructure are reported explicitly, never as a pass; agent E2E remains unavailable and manual E2E workflow fails with a blocked explanation.
-- [x] `peerimeter-service` independent CI added at Phase 3; PR #1 `verify`, `action-lock` and aggregate `check` passed on hosted Ubuntu at `440c4b5` (run `43792371049`).
+- [x] `peerimeter-service` independent CI added at Phase 3; PR #1 `verify`, `action-lock` and aggregate `check` passed on hosted Ubuntu at `eb96f89` (run `43834468132`).
 
 ## Additional requirements checklist
 
@@ -83,7 +83,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `8a6fb0d` (progress UX merged); `1f7a1fc` (confirmation and native updater CI); `091bd40` (accepted Phase 1) | ✅ Phase 2 complete | Native build/tests, installed-binary E2E, WireGuard integration, all package targets and CodeRabbit review passed |
-| `peerimeter-service` | `440c4b563451e825f91368b5c97eb98ee4b66ca2` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build passed; hosted Go 1.27.4 race/tests/vet/build/Docker/action-lock passed at run `43792371049`; CodeRabbit re-review pending |
+| `peerimeter-service` | `eb96f89fca362f3e48ee1f700af705593bb1c3b9` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build passed; hosted Go 1.27.4 race/tests/vet/build/Docker/action-lock passed at run `43834468132`; CodeRabbit re-review pending |
 
 ## Completed work
 
@@ -362,8 +362,9 @@ remain outside the completed self-update scope.
 
 Created the independent public [`peerimeter-service`](https://github.com/peerimeter/peerimeter-service)
 repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`,
-updated with the toolchain pin at `662c4c442a4b43b9889fbfe0e6850ebef9df6182`
-and review fixes at `440c4b563451e825f91368b5c97eb98ee4b66ca2`, is under
+updated with the toolchain pin at `662c4c442a4b43b9889fbfe0e6850ebef9df6182`,
+review fixes at `440c4b563451e825f91368b5c97eb98ee4b66ca2`, and config-ID
+validation at `eb96f89fca362f3e48ee1f700af705593bb1c3b9`, is under
 [PR #1](https://github.com/peerimeter/peerimeter-service/pull/1).
 It adds a chi v5 API with versioned network/node JSON `GET`/`PUT`, a Base64URL
 v1 join bundle, Bearer API-key authentication, serialized in-memory writes to
@@ -388,13 +389,17 @@ Local validation at the current commit used Go 1.27.3 on Linux ARM64 with
 has no C compiler or Docker engine, so race tests and a container build have not
 run locally. Invoking the local Go 1.27.4 toolchain segfaults before reporting
 its version; hosted CI uses `.go-version` to install and test with 1.27.4.
-Hosted PR run [`43792371049`](https://github.com/peerimeter/peerimeter-service/actions/runs/43792371049)
+Hosted PR run [`43834468132`](https://github.com/peerimeter/peerimeter-service/actions/runs/43834468132)
 passed: its Ubuntu runner installed Go 1.27.4 from `.go-version`, then passed
 format, vet, race/tests, binary build, Docker build, action-lock verification
-and aggregate `check`. CodeRabbit flagged a missing Buildx setup and failure to
-wait for HTTP shutdown; both were fixed in commit `440c4b5`, and re-review is
-pending. The service repository has no branch
-protection configured, so auto-merge remains disabled. Phase 3 is in progress;
+and aggregate `check`. CodeRabbit's Buildx and shutdown findings were fixed at
+`440c4b5`. A later review found that empty node IDs could overwrite network
+config and asked to document exact version tags; both were fixed at `eb96f89`,
+along with disabling checkout credential persistence. Review of this head is
+pending. The service `main` branch now mirrors the agent's protections: strict
+`check` and CodeRabbit requirements, resolved review conversations, linear
+history, and no force-push or deletion. Repository auto-merge is enabled and
+PR #1 is waiting on its current CodeRabbit status. Phase 3 remains in progress;
 agent enrollment/sync, scoped credentials, PostgreSQL/MQTT, host-file DNS and
 independent phase review remain outstanding.
 
@@ -405,7 +410,6 @@ service PR #1. That PR records the `go 1.27` module directive, exact
 PR #13 passed its required CodeRabbit status and auto-merged at
 `76cde408f29631516ed16a64a9dfe1ea188181a9`; its review's earlier CI-pending
 finding was corrected before the merge. Service PR #1 remains open with all
-hosted CI gates passing. CodeRabbit's initial review findings were fixed at
-`440c4b5`; a re-review of that exact head was requested and acknowledged, but
-the final review result has not yet appeared. The service repository lacks
-branch protection, so auto-merge is disabled there.
+hosted CI gates passing. The service `main` protections were applied through the
+GitHub API and match the agent branch rules. Auto-merge is enabled at repo and
+PR level; PR #1 is waiting for its current CodeRabbit check.
