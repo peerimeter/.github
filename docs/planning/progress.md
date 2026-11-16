@@ -402,6 +402,10 @@ Shared guidance and this tracker update are in
 [`.github` PR #13](https://github.com/peerimeter/.github/pull/13), separate from
 service PR #1. That PR records the `go 1.27` module directive, exact
 `.go-version` pin, and required generated Action lock/CI verification workflow.
-Its CodeRabbit review noted the service CI status was pending; the tracker now
-records the successful run and the latest head is awaiting re-review before
-auto-merge.
+PR #13 passed its required CodeRabbit status and auto-merged at
+`76cde408f29631516ed16a64a9dfe1ea188181a9`; its review's earlier CI-pending
+finding was corrected before the merge. Service PR #1 remains open with all
+hosted CI gates passing. CodeRabbit's initial review findings were fixed at
+`440c4b5`; a re-review of that exact head was requested and acknowledged, but
+the final review result has not yet appeared. The service repository lacks
+branch protection, so auto-merge is disabled there.
