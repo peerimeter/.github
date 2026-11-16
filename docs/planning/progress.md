@@ -83,7 +83,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `8a6fb0d` (progress UX merged); `1f7a1fc` (confirmation and native updater CI); `091bd40` (accepted Phase 1) | ✅ Phase 2 complete | Native build/tests, installed-binary E2E, WireGuard integration, all package targets and CodeRabbit review passed |
-| `peerimeter-service` | `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build and action-lock passed; hosted CI pending; local race/Docker unavailable |
+| `peerimeter-service` | `662c4c442a4b43b9889fbfe0e6850ebef9df6182` (PR #1) | 🔄 Phase 3 initial API/storage | Local Go 1.27.3 ARM64 `CGO_ENABLED=0` tests/vet/build and action-lock passed; hosted CI pending; local Go 1.27.4 invocation/race/Docker unavailable |
 
 ## Completed work
 
@@ -361,7 +361,8 @@ remain outside the completed self-update scope.
 ## Phase 3 service start — 2026-11-16
 
 Created the independent public [`peerimeter-service`](https://github.com/peerimeter/peerimeter-service)
-repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`
+repository. Initial implementation commit `686f3f35aebce5f0eb3a5ab9b4ba024daeb81d2b`,
+updated with the toolchain pin at `662c4c442a4b43b9889fbfe0e6850ebef9df6182`,
 is under [PR #1](https://github.com/peerimeter/peerimeter-service/pull/1).
 It adds a chi v5 API with versioned network/node JSON `GET`/`PUT`, a Base64URL
 v1 join bundle, Bearer API-key authentication, serialized in-memory writes to
@@ -375,15 +376,18 @@ The service Dockerfile is multi-stage and non-root. Its version-tag workflow
 tests/builds the service and image, verifies `.github/workflows/actions.lock`,
 and publishes `linux/amd64` and `linux/arm64` images to GHCR after valid
 `vX.Y.Z` tags. Current Actions use explicit release tags whose immutable SHAs
-are recorded in the generated lock. The service module declares only `go 1.27`;
-CI and the container builder use the Go 1.27 line, with no `.go-version` file.
+are recorded in the generated lock. The service module declares `go 1.27`,
+while `.go-version` pins the exact development/CI/container toolchain to Go
+1.27.4.
 
-Local validation at that exact commit used Go 1.27.3 on Linux ARM64 with
+Local validation at the current commit used Go 1.27.3 on Linux ARM64 with
 `CGO_ENABLED=0`: `go test -count=1 ./...`, `go vet ./...`, `go build`,
 `gh actions-lock --verify`, and `git diff --check` passed. The local environment
 has no C compiler or Docker engine, so race tests and a container build have not
-run locally. Hosted PR checks are pending at
-[`run 43790251718`](https://github.com/peerimeter/peerimeter-service/actions/runs/43790251718).
+run locally. Invoking the local Go 1.27.4 toolchain segfaults before reporting
+its version; hosted CI uses `.go-version` to install and test with 1.27.4.
+Hosted PR checks are pending at
+[`run 43790849468`](https://github.com/peerimeter/peerimeter-service/actions/runs/43790849468).
 The PR has no requested reviews yet. The service repository has no branch
 protection configured, so auto-merge remains disabled. Phase 3 is in progress;
 agent enrollment/sync, scoped credentials, PostgreSQL/MQTT, host-file DNS and
@@ -391,5 +395,5 @@ independent phase review remain outstanding.
 
 Shared guidance and this tracker update are in
 [`.github` PR #13](https://github.com/peerimeter/.github/pull/13), separate from
-service PR #1. That PR records the `go 1.27` service rule and the required
-generated Action lock/CI verification workflow.
+service PR #1. That PR records the `go 1.27` module directive, exact
+`.go-version` pin, and required generated Action lock/CI verification workflow.
