@@ -354,8 +354,9 @@ is planned work; today's static CLI remains scoped to a selected runtime/profile
   complete owned-resource cleanup.
 - Validate interface names, listen ports, overlapping routes/AllowedIPs and generated
   hostnames across networks before applying changes; reject unsupported conflicts.
-- Distinguish network-scoped leave/stop from service-wide stop and full uninstall.
-  Uninstall must enumerate all owned networks and preserve unrelated resources.
+- Distinguish network-scoped disconnect/leave from service-wide stop and full
+  uninstall. Uninstall must enumerate all owned networks and preserve unrelated
+  resources.
 - Acceptance: at least two networks managed simultaneously by one service on every
   supported OS; verify independent traffic, join/leave, update, restart, offline cache,
   one-network failure isolation, conflict rejection and complete owned-resource cleanup.
