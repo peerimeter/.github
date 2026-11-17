@@ -349,8 +349,9 @@ service operation.
   peer configuration. The agent's `config` CLI command was removed;
   service-side configuration API endpoints remain a separate API surface.
 - Expose `peerimeter-agent networks` as an overview of every managed network. In
-  managed mode, `status`, `wg show`, `sync` and `diagnose` accept
-  `--network <network-id>` and require it when the target is ambiguous.
+  managed mode, `status`, `wg show` and `diagnose` accept
+  `--network <network-id>` and require it when the target is ambiguous. `sync`
+  uses its implemented `--network-id <network-id>` flag.
   `connect --network <network-id>`, `disconnect --network <network-id>`,
   `reconnect <peer-id> --network <network-id>` and
   `leave --network <network-id>` always require an explicit selection.
