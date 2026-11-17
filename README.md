@@ -6,10 +6,9 @@
 
 ## Project setup
 
-When this repository is checked out as `.github` alongside the Peerimeter
-repositories, run the following from the workspace root (the directory that
-contains `.github`) to make the shared instructions available to AI coding
-agents:
+Start AI coding agents from the workspace root (the directory that contains
+`.github`) so they can discover the shared instructions. When this repository
+is checked out there as `.github` alongside the Peerimeter repositories, run:
 
 ```sh
 if [ -f .github/AGENTS.md ] && [ ! -e AGENTS.md ] && [ ! -L AGENTS.md ]; then
