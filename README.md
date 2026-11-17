@@ -8,22 +8,6 @@
   <a href="https://github.com/peerimeter/peerimeter-agent">peerimeter-agent</a> · <a href="https://github.com/peerimeter/peerimeter-service">peerimeter-service</a> · <a href="https://github.com/peerimeter/peerimeter-dashboard">peerimeter-dashboard</a>
 </p>
 
-## Project setup
-
-Start AI coding agents from the workspace root (the directory that contains
-`.github`) so they can discover the shared instructions. When this repository
-is checked out there as `.github` alongside the Peerimeter repositories, run:
-
-```sh
-if [ -f .github/AGENTS.md ] && [ ! -e AGENTS.md ] && [ ! -L AGENTS.md ]; then
-  ln -s .github/AGENTS.md AGENTS.md
-fi
-```
-
-This creates the workspace-level `AGENTS.md` symlink only when the shared
-instructions exist and no workspace-level `AGENTS.md` file or symlink is
-already present.
-
 Peerimeter is a self-hosted WireGuard mesh agent for direct peer-to-peer connections. The agent can use local configuration independently, while an optional control-plane service provides a shared API for network and node configuration.
 
 The project is organized around three independent code repositories:
@@ -41,6 +25,22 @@ Connections are direct only: UDP hole punching is best effort, with no TURN or r
 See [the implementation plan](https://github.com/peerimeter/.github/blob/main/docs/planning/plan.md), [additional requirements](https://github.com/peerimeter/.github/blob/main/docs/planning/additional-plan.md), and [progress tracker](https://github.com/peerimeter/.github/blob/main/docs/planning/progress.md).
 
 ## Quick setup: register agents through the service
+
+### Project setup
+
+Start AI coding agents from the workspace root (the directory that contains
+`.github`) so they can discover the shared instructions. When this repository
+is checked out there as `.github` alongside the Peerimeter repositories, run:
+
+```sh
+if [ -f .github/AGENTS.md ] && [ ! -e AGENTS.md ] && [ ! -L AGENTS.md ]; then
+  ln -s .github/AGENTS.md AGENTS.md
+fi
+```
+
+This creates the workspace-level `AGENTS.md` symlink only when the shared
+instructions exist and no workspace-level `AGENTS.md` file or symlink is
+already present.
 
 Deploy `peerimeter-service` using the [service setup guide](https://service.peerimeter.app/).
 Configure a strong `PEERIMETER_API_KEY` on the service and set
