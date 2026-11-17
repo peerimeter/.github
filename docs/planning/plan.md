@@ -290,6 +290,13 @@ Implement diff-based, idempotent reconcile. Normal endpoint/peer updates **must 
 
 ## 7. Configuration synchronization
 
+The current agent implementation provides explicit, synchronous `sync` for a
+joined network: refresh the local node registration, fetch current peer
+records, then apply those peers to the configuration used by the running
+agent. It does not upload the fetched peer configuration. This is an initial
+single-running-network increment; revision tracking, background recovery and
+concurrent managed networks below are planned work.
+
 ### Canonical flow
 
 1. Server commits network/config change transactionally and increments the **network revision** once.
@@ -717,7 +724,8 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 - [ ] `peerimeter-agent join --token <bundle>` decodes, validates URL/expiry as applicable, exchanges enrollment secret for device credentials and downloads initial managed configuration; never requires separate `--server`.
 - [ ] Preserve static mode; online/managed mode must reuse the same WG reconciler and OS adapters.
 - [ ] One agent service must manage multiple enrolled networks concurrently on Linux, macOS and Windows. Scope keys, credentials, config revisions, interface ownership, reconciliation and lifecycle per network; support explicit CLI network selection and an all-network overview. Joining, syncing, stopping or leaving one network must preserve the others. Reject ambiguous selections, interface/port collisions and conflicting routes before mutation. Verify restart recovery, offline cached operation and failure isolation with at least two networks; see additional-plan.md A12.
-- [ ] Managed `sync --network <network-id>` refreshes that node's registration and endpoint candidates before fetching and applying authoritative peer state; it must not push the fetched peer configuration back wholesale. Keep `config push` explicit and scoped to its separate Service API YAML files.
+- [x] Agent `sync --network-id <network-id>` refreshes the local node registration and endpoint candidate before fetching the current peer list, then applies the peers to the active running configuration. If exactly one joined network is saved, the flag is optional; with multiple saved networks it is required. Sync verifies the selected network matches the running agent. The agent `config` CLI command was removed; sync does not upload peer configuration.
+- [ ] Extend sync to select and reconcile one network within a concurrent multi-network service, with per-network revisions, cached offline operation and notification recovery.
 - [ ] Integrate MQTT/TLS notifications and periodic API re-sync; test offline and missed-event reconciliation.
 - [ ] Add managed host-file entries for peer DNS names using a maintained Go hosts-file library. Derive each peer's hostname from a configurable template such as `$hostName.$networkName` and map it to that peer's **WireGuard tunnel address(es)** from its configured interface addresses. Do not put LAN/private-underlay addresses in these entries. Synchronize changes when peers join, rename, change WireGuard address, or leave. Only edit an agent-owned marked block; preserve unrelated hosts-file content, make updates idempotent and atomic, validate DNS labels/templates and address conflicts, and remove only managed entries on leave/uninstall. Verify permissions, restart recovery and behavior on Linux, macOS and Windows; clearly report when required privileges prevent an update.
 
@@ -726,14 +734,14 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 ### Phase 4 — STUN, direct NAT traversal, self-healing (critical path)
 - [ ] Validate STUN socket mapping versus actual WG source port on every relevant backend.
 - [ ] Discover each agent's LAN/private-underlay addresses separately from its WireGuard tunnel addresses; exchange and select reachable same-LAN addresses as direct peer endpoints, with tests proving same-network peers use their internal addresses when available.
-- [ ] Agents register their WireGuard public key and primary physical interface addresses; persist each node's registration/configuration as its own service-side YAML file. Never upload private keys.
+- [x] Agents register their WireGuard public key, listen port, primary physical interface and local addresses; persist each node's registration as its own service-side YAML file. `sync` refreshes the registration and best-effort public endpoint before fetching peers; if STUN cannot bind the tunnel's UDP port, it retains the last registered public endpoint. Never upload private keys.
 - [ ] Exchange public endpoint candidates and coordinate bounded, simultaneous UDP hole-punch attempts; apply selected endpoints to the existing WireGuard session without exposing tunnel traffic to the service.
 - [ ] Select only the primary physical ethernet/Wi-Fi interface for local CIDR reporting; exclude loopback, virtual/tunnel, container, and secondary interfaces. Do not treat a shared public IP or overlapping RFC1918 prefix as proof of reachability.
 - [ ] Implement endpoint candidate discovery/exchange, dynamic endpoint updates, network events, health probes and recoverable state machine.
 - [ ] Test public IP/port changes, packet loss, sleep/wake, control-plane outages and failed direct connections.
 - [ ] Keep **no relay** policy; report unsupported NAT/firewall cases transparently.
 
-**Phase 3/4 user-prioritized increment (2026-11-16):** complete automatic node registration and peer exchange alongside direct UDP hole punching. Agents report only their primary physical ethernet/Wi-Fi interface's addresses/CIDRs. Store each node configuration separately as YAML on the service. Preserve the API-free static mode. Hole punching is best-effort and direct-only; symmetric NAT and UDP-blocking firewalls remain unsupported and must be reported, never silently relayed.
+**Phase 3/4 user-prioritized increment (2026-11-16; sync registration completed 2026-11-17):** `sync` publishes the current node registration before peer exchange. Agents report only their primary physical ethernet/Wi-Fi interface's addresses/CIDRs; the service stores registrations separately as YAML. This does not complete automatic hole punching or network-change recovery. Preserve API-free static mode. Connectivity remains direct-only; symmetric NAT and UDP-blocking firewalls remain unsupported and must be reported, never silently relayed.
 
 **Done when:** same-LAN peers can discover and use reachable internal endpoints, and documented public-IP/port-change scenarios recover autonomously where direct connectivity is feasible.
 

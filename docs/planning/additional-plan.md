@@ -308,6 +308,14 @@ Expand that into a complete managed-mode requirement: **one installed agent serv
 must manage multiple networks concurrently**, on Linux, macOS and Windows. This
 is planned work; today's static CLI remains scoped to a selected runtime/profile.
 
+The agent's current sync increment (PRs #68–#70) works against the one
+currently running network. It selects the only saved joined network by default;
+when multiple joined-network credentials are saved, `--network-id` is
+required. It then verifies that the selected ID matches the running agent,
+refreshes that node's registration, fetches the peer list and applies it to
+the active configuration. This does not provide concurrent multi-network
+service operation.
+
 - When the installed service is running, `join` must enroll and register the new
   network with that service over authenticated local IPC. The service must
   persist the network as a separate managed profile and automatically bring up
@@ -332,11 +340,14 @@ is planned work; today's static CLI remains scoped to a selected runtime/profile
   credential scope explicitly; never accidentally reuse one network's credentials.
 - Give each network independent interface ownership, listen-port allocation,
   reconciliation, API/MQTT subscriptions, cached offline operation and failure state.
-- `sync --network <network-id>` refreshes and publishes only that node's
-  registration and endpoint candidates, then fetches and applies the server's
-  authoritative peer state. It must not push the downloaded peer config back
-  wholesale; `config push` remains an explicit operation on separate Service
-  API YAML files.
+- Extend `sync --network-id <network-id>` to the concurrent service runtime:
+  refresh and publish only the selected node's registration and endpoint
+  candidates, then fetch and apply that network's authoritative peer state.
+  The current one-runtime implementation already performs this sequence for
+  its active network, selecting the only saved network automatically and
+  requiring `--network-id` when more than one is saved. Sync must not upload
+  peer configuration. The agent's `config` CLI command was removed;
+  service-side configuration API endpoints remain a separate API surface.
 - Expose `peerimeter-agent networks` as an overview of every managed network. In
   managed mode, `status`, `wg show`, `sync` and `diagnose` accept
   `--network <network-id>` and require it when the target is ambiguous.
