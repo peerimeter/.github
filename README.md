@@ -4,6 +4,22 @@
 
 # Peerimeter
 
+## Project setup
+
+When this repository is checked out as `.github` alongside the Peerimeter
+repositories, run the following from the workspace root (the directory that
+contains `.github`) to make the shared instructions available to Codex:
+
+```sh
+if [ -f .github/AGENTS.md ] && [ ! -e AGENTS.md ] && [ ! -L AGENTS.md ]; then
+  ln -s .github/AGENTS.md AGENTS.md
+fi
+```
+
+This creates the workspace-level `AGENTS.md` symlink only when the shared
+instructions exist and no workspace-level `AGENTS.md` file or symlink is
+already present.
+
 Peerimeter is a self-hosted WireGuard mesh agent for direct peer-to-peer connections. The agent can use local configuration independently, while an optional control-plane service provides a shared API for network and node configuration.
 
 The project is organized around three independent code repositories:
