@@ -7,7 +7,7 @@
 - **Active work:** ✅ Phases 0–2 complete; 🔄 Phases 3–5 in progress.
 - **Last verified milestone:** Agent self-update passed native build/test, installed-binary E2E, WireGuard integration, packaging and action-lock checks on Linux, macOS and Windows. Phase 5's React/Vite dashboard with API-key login, network creation/listing, peer display/editing, and cross-platform join commands merged in dashboard PR #1 (`7ceec62`). Service PR #10 merged at `fa3f370`, adding configured CORS, network-wide peer listing, local development URLs, and the environment-controlled HTTPS requirement. Local Go tests/build/vet and hosted CI passed; independent review found no blockers.
 - **Repositories:** `peerimeter-agent` (Phases 0–2 and managed join); `peerimeter-service` (Phase 3 onward); `peerimeter-dashboard` (Phase 5 UI). Three independent Git repositories plus this shared `.github` documentation/configuration repository.
-- **Next action:** Continue managed join and runtime sync in small increments; Phase 5 GitHub SSO and production-hosting documentation remain future work.
+- **Next action:** Design and implement Phase 3 managed multi-network service behavior: service-mediated Join, automatic connection of newly joined networks, and network-scoped `connect`/`disconnect`; Phase 5 GitHub SSO and production-hosting documentation remain future work.
 
 The phase numbering below supersedes historical entries: agent self-update is now
 Phase 2, and the former control-plane through release-hardening phases move to
@@ -26,7 +26,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/`wg show` belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
-| 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage merged in service PR #1; scratch runtime and main SemVer image publishing in service PR #2. Agent PR #49 adds one-shot network/node JSON pull/push from the join bundle. The bundle's `enrollment_token` is currently the shared static API key. Service PR #10 adds exact-origin dashboard CORS and network-wide peer listing. Durable enrollment, runtime reconciliation, scoped credentials, PostgreSQL/MQTT and host-file DNS remain outstanding |
+| 3 — Server + join bundles + sync | 🔄 In progress | Initial API/config storage merged in service PR #1; scratch runtime and main SemVer image publishing in service PR #2. Agent PR #49 adds one-shot network/node JSON pull/push from the join bundle. The bundle's `enrollment_token` is currently the shared static API key. Service PR #10 adds exact-origin dashboard CORS and network-wide peer listing. Managed Join integration with the running service, simultaneous multi-network runtime and network-scoped connect/disconnect are planned in additional-plan A12, not implemented. Durable enrollment, runtime reconciliation, scoped credentials, PostgreSQL/MQTT and host-file DNS remain outstanding |
 | 4 — NAT traversal + self-healing | 🔄 In progress | User-prioritized increment adds primary-interface underlay reporting and best-effort direct UDP discovery; no relay. Native LAN/NAT traversal and network-change recovery remain unverified |
 | 5 — Browser dashboard + GitHub SSO | 🔄 In progress | Dashboard PR #1 provides API-key sign-in, network create/list, peer list and metadata editing, network-scoped join commands, `VITE_SERVICE_URL`, Playwright tests, and `test:ui`. GitHub SSO remains a later increment. |
 | 6 — External WireGuard client gateway | ⬜ Not started | |
@@ -531,3 +531,29 @@ service branch was deleted after confirming no open PR used it. Shared repo
 settings guidance is in [`.github` PR #17](https://github.com/peerimeter/.github/pull/17)
 and the local service AGENTS.md policy merged in PR #3. Auto-merge is enabled
 at repo and PR level.
+
+## Planned managed multi-network Join and connection controls — 2026-11-17
+
+The project owner clarified the expected Phase 3 service-mode behavior. When
+the installed agent service is running, `join` must register the new network
+with that service through authenticated local IPC; the service then persists
+the profile and automatically brings up that network's tunnel without starting
+a competing agent process or interrupting other networks. A newly joined
+network defaults to connected. Persist each network's requested connection
+state so an explicitly disconnected network stays down after service restart.
+
+Add network-scoped `connect --network <network-id>` and
+`disconnect --network <network-id>` commands. Disconnect stops only the
+selected tunnel while retaining membership, credentials, keys and desired
+configuration; `connect` resumes it. `leave` remains distinct and removes the
+managed profile, with server-side revocation dependent on API support. The
+static `run --config` path remains single-profile and offline. These requirements
+are captured in `additional-plan.md` A12 and `plan.md`'s managed CLI contract;
+they are planned and are not current capabilities.
+
+Agent PR [#64](https://github.com/peerimeter/peerimeter-agent/pull/64) is open
+for the narrower UX change that makes foreground tunnel startup opt-in via
+`join --run`. That PR does not implement joining through the installed service
+or multi-network lifecycle control. Its required CI and CodeRabbit review were
+still running at the time of this tracker update; auto-merge is enabled under
+branch protection.

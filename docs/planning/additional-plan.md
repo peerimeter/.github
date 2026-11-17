@@ -308,6 +308,25 @@ Expand that into a complete managed-mode requirement: **one installed agent serv
 must manage multiple networks concurrently**, on Linux, macOS and Windows. This
 is planned work; today's static CLI remains scoped to a selected runtime/profile.
 
+- When the installed service is running, `join` must enroll and register the new
+  network with that service over authenticated local IPC. The service must
+  persist the network as a separate managed profile and automatically bring up
+  its tunnel, without starting a second agent process or interrupting existing
+  networks. A successful CLI `join` in service mode therefore means the
+  service has accepted the new profile and is managing its connection; it must
+  not run the tunnel in the CLI process.
+- Provide `connect --network <network-id>` and
+  `disconnect --network <network-id>` to bring only the selected network's
+  tunnel up or down. `disconnect` is a temporary connection-state change: it
+  preserves enrollment, keys, credentials and desired configuration, and the
+  network remains listed as managed. `connect` resumes that network. Neither
+  command may stop or restart other networks or the whole service. `leave`
+  remains the separate operation for removing local managed state and, when
+  supported by the API, revoking server-side membership.
+- Persist the requested connected/disconnected state across service restarts.
+  Newly joined networks default to connected; a previously disconnected
+  network must remain disconnected after reboot until explicitly connected.
+
 - Persist separate protected network identities, WireGuard keys, enrollment/device
   credentials, desired configurations and revisions. Define device versus network
   credential scope explicitly; never accidentally reuse one network's credentials.
@@ -316,16 +335,23 @@ is planned work; today's static CLI remains scoped to a selected runtime/profile
 - Expose `peerimeter-agent networks` as an overview of every managed network. In
   managed mode, `status`, `wg show`, `sync` and `diagnose` accept
   `--network <network-id>` and require it when the target is ambiguous.
+  `connect --network <network-id>`, `disconnect --network <network-id>`,
   `reconnect <peer-id> --network <network-id>` and
   `leave --network <network-id>` always require an explicit selection.
-  `stop --network <network-id>` stops only that network; `service stop` remains
-  service-wide. Ambiguous mutations must fail clearly.
+  `disconnect` stops only the selected tunnel while retaining its managed
+  profile; `leave` removes that profile. `service stop` remains service-wide.
+  Ambiguous mutations must fail clearly.
 - Keep `wg` as an alias for `wg show`; `wg [show] --json` returns the stable
   public peer data. Static
   `run --config` remains profile-scoped and independent of managed network
   selection.
-- Joining, updating, stopping, leaving or recovering one network must not restart,
+- Joining, connecting, disconnecting, updating, leaving or recovering one network must not restart,
   delete or overwrite another network's interface, routes, credentials or DNS entries.
+- Acceptance: at least two networks managed simultaneously by one service on every
+  supported OS; verify join to a running service automatically connects the new
+  network, independent traffic, connect/disconnect persistence, leave, update,
+  restart, offline cache, one-network failure isolation, conflict rejection and
+  complete owned-resource cleanup.
 - Validate interface names, listen ports, overlapping routes/AllowedIPs and generated
   hostnames across networks before applying changes; reject unsupported conflicts.
 - Distinguish network-scoped leave/stop from service-wide stop and full uninstall.
