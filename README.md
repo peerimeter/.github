@@ -4,6 +4,10 @@
 
 # Peerimeter
 
+<p align="center">
+  <a href="https://github.com/peerimeter/peerimeter-agent">peerimeter-agent</a> · <a href="https://github.com/peerimeter/peerimeter-service">peerimeter-service</a> · <a href="https://github.com/peerimeter/peerimeter-dashboard">peerimeter-dashboard</a>
+</p>
+
 ## Project setup
 
 Start AI coding agents from the workspace root (the directory that contains
