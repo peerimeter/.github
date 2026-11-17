@@ -332,6 +332,11 @@ is planned work; today's static CLI remains scoped to a selected runtime/profile
   credential scope explicitly; never accidentally reuse one network's credentials.
 - Give each network independent interface ownership, listen-port allocation,
   reconciliation, API/MQTT subscriptions, cached offline operation and failure state.
+- `sync --network <network-id>` refreshes and publishes only that node's
+  registration and endpoint candidates, then fetches and applies the server's
+  authoritative peer state. It must not push the downloaded peer config back
+  wholesale; `config push` remains an explicit operation on separate Service
+  API YAML files.
 - Expose `peerimeter-agent networks` as an overview of every managed network. In
   managed mode, `status`, `wg show`, `sync` and `diagnose` accept
   `--network <network-id>` and require it when the target is ambiguous.
