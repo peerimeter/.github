@@ -8,7 +8,8 @@
 
 When this repository is checked out as `.github` alongside the Peerimeter
 repositories, run the following from the workspace root (the directory that
-contains `.github`) to make the shared instructions available to Codex:
+contains `.github`) to make the shared instructions available to AI coding
+agents:
 
 ```sh
 if [ -f .github/AGENTS.md ] && [ ! -e AGENTS.md ] && [ ! -L AGENTS.md ]; then
