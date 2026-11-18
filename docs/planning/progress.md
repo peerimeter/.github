@@ -7,7 +7,7 @@
 - **Active work:** ✅ Phases 0–2 complete; 🔄 Phases 3–5 in progress.
 - **Last verified milestone:** Agent PRs [#68](https://github.com/peerimeter/peerimeter-agent/pull/68), [#69](https://github.com/peerimeter/peerimeter-agent/pull/69), [#70](https://github.com/peerimeter/peerimeter-agent/pull/70), and [#71](https://github.com/peerimeter/peerimeter-agent/pull/71) merged on 2026-11-17. The agent `config` CLI command, including `pull/push`, is removed; managed `sync` refreshes this node's registration, fetches peer records, and applies them to the running agent config. PR #71 fixed the intermittent macOS full-uninstall failure caused by a runtime marker disappearing during extended-permission inspection. PR #71's native build/tests, WireGuard integration, packages, action-lock, and CodeRabbit checks passed on Linux, macOS and Windows (workflow run [44194689880](https://github.com/peerimeter/peerimeter-agent/actions/runs/44194689880)); the follow-up `main` run [44195585597](https://github.com/peerimeter/peerimeter-agent/actions/runs/44195585597) also passed every job, including macOS integration. Service main `b18eda3` and dashboard main `b2179eb` also pass their latest hosted CI. The dashboard PR #1 and service PR #10 remain merged.
 - **Repositories:** `peerimeter-agent` (Phases 0–2, managed join and single-running-network sync); `peerimeter-service` (Phase 3 API and node registration); `peerimeter-dashboard` (Phase 5 API-key UI). Three independent Git repositories plus this shared `.github` documentation/configuration repository.
-- **Next action:** Implement concurrent multi-network service behavior, scoped/revocable credentials and durable enrollment; add network-scoped `connect`/`disconnect`. Phase 5 GitHub SSO and production-hosting documentation remain future work.
+- **Next action:** Finish the PostgreSQL backend review and run its integration suite on a dedicated database; then continue concurrent multi-network service behavior, scoped/revocable credentials and durable enrollment. Phase 5 GitHub SSO and production-hosting documentation remain future work.
 
 The phase numbering below supersedes historical entries: agent self-update is now
 Phase 2, and the former control-plane through release-hardening phases move to
@@ -26,7 +26,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | 0 — Cross-platform baseline + static JSON | ✅ Complete | Independent agent repo, strict config/key handling, CLI contracts/validation, testable lifecycle/interfaces, native CI and backend feasibility verified on all three; operational run/status/`wg show` belong to Phase 1 |
 | 1 — Offline WireGuard on Linux/macOS/Windows | ✅ Complete | Native runtime, directory separation, migration, complete uninstall, CLI presentation, installers and independent review passed at `091bd40` |
 | 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
-| 3 — Server + join bundles + sync | 🔄 In progress | Service API, join bundles, managed agent join and network/node peer exchange are implemented. Agent PRs #68–#70 make sync target the running configuration, refresh the node's public-key/underlay registration, then fetch and apply peers; `--network-id` defaults only when one joined network exists and is required when multiple are saved. The flag does not provide concurrent network runtimes: sync verifies the selected network matches the active agent. The agent `config` CLI command was removed in PR #69; sync does not upload peer config. The bundle's `enrollment_token` is still the shared static API key. Concurrent network service management, scoped/revocable credentials, background/service-driven reconciliation, PostgreSQL/MQTT and host-file DNS remain outstanding |
+| 3 — Server + join bundles + sync | 🔄 In progress | Service API, join bundles, managed agent join and network/node peer exchange are implemented. Agent PRs #68–#70 make sync target the running configuration, refresh the node's public-key/underlay registration, then fetch and apply peers; `--network-id` defaults only when one joined network exists and is required when multiple are saved. The flag does not provide concurrent network runtimes: sync verifies the selected network matches the active agent. The agent `config` CLI command was removed in PR #69; sync does not upload peer config. The bundle's `enrollment_token` is still the shared static API key. PostgreSQL dual-backend code is in service PR [#16](https://github.com/peerimeter/peerimeter-service/pull/16); independent review of `39a2f83` found no remaining findings. Hosted CI and CodeRabbit are running. PostgreSQL integration tests are wired to CI's isolated database; a separate Supabase-hosted run remains pending. Concurrent network service management, scoped/revocable credentials, background/service-driven reconciliation, MQTT and host-file DNS remain outstanding |
 | 4 — NAT traversal + self-healing | 🔄 In progress | User-prioritized increment adds primary-interface underlay reporting and best-effort direct UDP discovery; no relay. Native LAN/NAT traversal and network-change recovery remain unverified |
 | 5 — Browser dashboard + GitHub SSO | 🔄 In progress | Dashboard PR #1 provides API-key sign-in, network create/list, peer list and metadata editing, network-scoped join commands, `VITE_SERVICE_URL`, Playwright tests, and `test:ui`. GitHub SSO remains a later increment. |
 | 6 — External WireGuard client gateway | ⬜ Not started | |
@@ -84,7 +84,7 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `abe8ff1` (main; PR #71 merge; sync PR head `e8507bc`) | 🔄 Managed join, registration refresh and peer reconciliation | PR #71 CI run [44194689880](https://github.com/peerimeter/peerimeter-agent/actions/runs/44194689880) passed build/tests, integration and package jobs on Linux, macOS and Windows; action-lock and CodeRabbit passed. It fixed a macOS uninstall race where a runtime marker could disappear between metadata and extended-permission checks. Post-merge CI [44195585597](https://github.com/peerimeter/peerimeter-agent/actions/runs/44195585597) passed all jobs, including macOS integration. |
-| `peerimeter-service` | `b18eda3` (main) | 🔄 Network API, node registration and peer discovery | Latest hosted service CI run [44111644313](https://github.com/peerimeter/peerimeter-service/actions/runs/44111644313) passed. |
+| `peerimeter-service` | `39a2f83` (PR #16; based on main `b18eda3`) | 🔄 PostgreSQL storage and existing network API | Local Go 1.27.3 unit tests, vet, build, action-lock verification and diff checks pass. CI PR run [44217418128](https://github.com/peerimeter/peerimeter-service/actions/runs/44217418128) is running the PostgreSQL integration test against its isolated PostgreSQL service. Auto-merge is enabled with rebase; status checks and CodeRabbit are pending. |
 | `peerimeter-dashboard` | `b2179eb` (main) | 🔄 API-key dashboard UI | Latest hosted `check` run [44132896150](https://github.com/peerimeter/peerimeter-dashboard/actions/runs/44132896150) passed. |
 
 ## Completed work
@@ -361,6 +361,37 @@ provide mixed-OS/NAT connectivity evidence or constitute a public release; those
 remain outside the completed self-update scope.
 
 ## Phase 3 service start — 2026-11-16
+
+### PostgreSQL storage increment — 2026-11-18 (in progress)
+
+The service work branch `feat/postgresql-storage` adds a selectable `file` or
+`postgres` backend. PostgreSQL uses embedded Goose SQL migrations and GORM with
+JSONB for network metadata/config, node configs and registrations. Network
+creation serializes CIDR-overlap checks, and registration locks its network row
+while allocating an address. `PEERIMETER_IMPORT_FILE` imports the complete
+legacy JSON/YAML file store into an empty database in one transaction; the
+source files remain untouched. The file backend remains the default.
+
+Local checks with Go 1.27.3: `go test ./...`, `go vet ./...`, `go build ./...`
+and `git diff --check` passed. `gh actions-lock --verify` passed. The local
+toolchain is Go 1.27.3, below the required Go 1.27.4 pin. Local race testing
+could not run because the environment has no GCC. Service CI now runs the
+PostgreSQL integration test against a dedicated PostgreSQL 17.6 container
+pinned by image digest.
+
+Independent Codex review agent `/root/postgres_review` reviewed commit
+`39a2f830af3f7696816199f6053a8f499252b66f`; it found two issues in an earlier
+working diff (import/write race and test cleanup ordering), verified both fixes
+at this SHA, and reported no remaining finding. The exact model identifier was
+not exposed by the review tooling. PR [#16](https://github.com/peerimeter/peerimeter-service/pull/16)
+is open with rebase auto-merge enabled; hosted CI and CodeRabbit are still
+running.
+
+Supabase CLI is authenticated and sees only the existing `netguard-prod` and
+`netguard-staging` projects; neither is used for tests. The requested
+`peerimeter-test` project creation is awaiting the user's choice on the possible
+Micro compute charge. A separate Supabase-hosted integration run remains
+unverified; this increment does not complete Phase 3.
 
 ### User-prioritized automatic discovery increment — started 2026-11-16
 
