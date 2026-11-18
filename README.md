@@ -37,7 +37,9 @@ If any are missing, check them out into the workspace root.
 
 Also make the workspace instructions available as `AGENTS.md` in the workspace
 root, pointing to `.github/workspace/AGENTS.md`. Prefer a symlink; if the OS or
-permissions do not allow one, copy the file there instead. The pointer directs
+permissions do not allow one, copy the file there instead. If a root-level
+`AGENTS.md` already exists, inspect it and preserve its instructions while
+adding the shared workspace pointer; do not overwrite it. The pointer directs
 agents to `.github/AGENTS.md` for the shared workspace guidance.
 
 Deploy `peerimeter-service` using the [service setup guide](https://service.peerimeter.app/).
