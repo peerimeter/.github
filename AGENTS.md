@@ -34,19 +34,24 @@ Make the `.agents` directory available from the workspace root as a symlink to
 `.github/.agents`, so Codex can discover the project skills when started from
 the workspace root. If `.github/.claude` exists, also symlink it into the
 workspace root as `.claude` so Claude Code can discover its project settings or
-skills. Preserve any existing root `.agents` or `.claude` path; inspect it
-before deciding whether it can be reused, and do not overwrite it.
+skills. If root `.agents` is already a directory, preserve it, create its
+`skills/` directory if needed, and make each project skill available there
+with a symlink (or a non-overwriting copy if symlinks are unavailable). Leave same-name paths
+untouched and report conflicts. Preserve any existing root `.claude` path too;
+inspect it before deciding whether it can be reused, and do not overwrite it.
 
 ### Keep the workspace up to date
 
 Before starting work, update all four repositories in the workspace: `.github`,
-`peerimeter-agent`, `peerimeter-service`, and `peerimeter-dashboard`. In each
-repository, first check for uncommitted changes. Preserve any changes you need
-by committing or safely stashing them before switching branches. Then switch to
-`main`, fetch the latest remote updates, and fast-forward the local branch from
-`origin/main`. Finally, remove local branches that have already been merged
-into `origin/main`, and prune references to remote branches that have been
-deleted. Keep branches with unmerged commits.
+`peerimeter-agent`, `peerimeter-service`, and `peerimeter-dashboard`. Record the
+current branch and inspect each working tree first. Leave any repository with
+uncommitted changes untouched and report it. In each clean repository, fetch
+and prune `origin`, then update local `main` from `origin/main`. If local `main`
+contains commits that are not in `origin/main`, preserve them on a new branch
+before moving `main` to `origin/main`; report the saved branch. When the update
+finishes, return to the branch recorded at the start (except when that branch
+was `main`). Remove only other local branches already merged into
+`origin/main`, and keep every branch with unmerged commits.
 
 ## Working agreements
 

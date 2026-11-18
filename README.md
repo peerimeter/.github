@@ -26,6 +26,9 @@ See [the implementation plan](https://github.com/peerimeter/.github/blob/main/do
 
 ## Quick setup: register agents through the service
 
+For the four-repository development workspace, see the [workspace setup
+instructions](AGENTS.md#workspace-setup).
+
 ### Deploy peerimeter-service
 
 Deploy `peerimeter-service` using the [service setup guide](https://service.peerimeter.app/).
