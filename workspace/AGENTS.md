@@ -1,3 +1,4 @@
 # Workspace instructions
 
-For the shared workspace guidance, read [`.github/AGENTS.md`](../AGENTS.md) from the workspace root.
+This file is symlinked as `AGENTS.md` in the workspace root. From there, read
+`.github/AGENTS.md` for the shared workspace guidance.
