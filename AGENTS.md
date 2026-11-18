@@ -32,13 +32,17 @@ agents to `.github/AGENTS.md` for the shared workspace guidance.
 
 Make the `.agents` directory available from the workspace root as a symlink to
 `.github/.agents`, so Codex can discover the project skills when started from
-the workspace root. If `.github/.claude` exists, also symlink it into the
-workspace root as `.claude` so Claude Code can discover its project settings or
-skills. If root `.agents` is already a directory, preserve it, create its
-`skills/` directory if needed, and make each project skill available there
-with a symlink (or a non-overwriting copy if symlinks are unavailable). Leave same-name paths
-untouched and report conflicts. Preserve any existing root `.claude` path too;
-inspect it before deciding whether it can be reused, and do not overwrite it.
+the workspace root. If symlinks are unavailable, create root `.agents/skills/`
+and copy project skills there without overwriting existing paths. If root
+`.agents` is already a directory, preserve it, create its `skills/` directory
+if needed, and make each project skill available there with a symlink (or a
+non-overwriting copy if symlinks are unavailable). Leave same-name paths
+untouched and report conflicts. When refreshing copied skills, compare them
+with `.github/.agents` and merge updates without overwriting local edits. If
+`.github/.claude` exists, also symlink it into the workspace root as `.claude`
+so Claude Code can discover its project settings or skills. Preserve any
+existing root `.claude` path; inspect it before deciding whether it can be
+reused, and do not overwrite it.
 
 ### Keep the workspace up to date
 
@@ -51,7 +55,8 @@ contains commits that are not in `origin/main`, preserve them on a new branch
 before moving `main` to `origin/main`; report the saved branch. When the update
 finishes, return to the branch recorded at the start (except when that branch
 was `main`). Remove only other local branches already merged into
-`origin/main`, and keep every branch with unmerged commits.
+`origin/main`, excluding `main` and the branch being resumed. Keep every branch
+with unmerged commits.
 
 ## Working agreements
 
