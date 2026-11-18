@@ -44,20 +44,6 @@ so Claude Code can discover its project settings or skills. Preserve any
 existing root `.claude` path; inspect it before deciding whether it can be
 reused, and do not overwrite it.
 
-### Keep the workspace up to date
-
-Before starting work, update all four repositories in the workspace: `.github`,
-`peerimeter-agent`, `peerimeter-service`, and `peerimeter-dashboard`. Record the
-current branch and inspect each working tree first. Leave any repository with
-uncommitted changes untouched and report it. In each clean repository, fetch
-and prune `origin`, then update local `main` from `origin/main`. If local `main`
-contains commits that are not in `origin/main`, preserve them on a new branch
-before moving `main` to `origin/main`; report the saved branch. When the update
-finishes, return to the branch recorded at the start (except when that branch
-was `main`). Remove only other local branches already merged into
-`origin/main`, excluding `main` and the branch being resumed. Keep every branch
-with unmerged commits.
-
 ## Working agreements
 
 - Keep planning claims aligned with the agent, service and dashboard READMEs, their current implementations, `docs/planning/progress.md`, and actual CI evidence. The shared tracker is in this repository; do not expect duplicate per-repository progress files. Distinguish implemented features, planned features, and unverified network scenarios.
