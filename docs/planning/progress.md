@@ -9,6 +9,26 @@
 - **Repositories:** `peerimeter-agent` (Phases 0–2, managed join and single-running-network sync); `peerimeter-service` (Phase 3 API and node registration); `peerimeter-dashboard` (Phase 5 API-key UI). Three independent Git repositories plus this shared `.github` documentation/configuration repository.
 - **Next action:** Continue concurrent multi-network service behavior, scoped/revocable credentials and durable enrollment. PostgreSQL persistence, local Devbox setup and import guidance are implemented; a Supabase-hosted integration run remains unverified because creating `peerimeter-test` failed in the Supabase API. Phase 5 GitHub SSO and production-hosting documentation remain future work.
 
+## Infrastructure provider evaluation — 2026-11-18
+
+Added [`infrastructure.md`](infrastructure.md) with the free-plan and
+Terraform-provider comparison for Render, Railway, Supabase, Better Stack and
+EMQX Cloud Serverless. It keeps the existing Compose + Mosquitto deployment as
+the baseline, treats hosted free tiers as evaluation environments, and records
+production selection and validation gates. No infrastructure was provisioned;
+the comparison is based on linked vendor documentation checked on this date.
+
+The requested hosted target is now recorded there: Render runs
+`zerosuxx/simple-load-balancer:0.1.2` with `BACKEND_URLS` pointing at two
+Railway `peerimeter-service` instances, both using Supabase PostgreSQL;
+Better Stack monitors the Render URL. The PostgreSQL backend supplies shared
+persistent state and transaction-protected registration/address allocation to
+both service instances. The deployment still needs a two-instance verification
+run for concurrent migrations, shared configuration and routed requests. The
+load-balancer image's environment/port/health behavior also needs a deployment
+spike. Render and Railway free allocations may not keep this path reliably
+available, so the free-tier version is for evaluation.
+
 The phase numbering below supersedes historical entries: agent self-update is now
 Phase 2, and the former control-plane through release-hardening phases move to
 Phases 3–8. Older dated logs retain their original phase numbers for history.
