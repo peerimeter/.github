@@ -26,21 +26,22 @@ See [the implementation plan](https://github.com/peerimeter/.github/blob/main/do
 
 ## Quick setup: register agents through the service
 
-### Project setup
+### Workspace setup
 
 Start AI coding agents from the workspace root (the directory that contains
 `.github`) so they can discover the shared instructions. When this repository
 is checked out there as `.github` alongside the Peerimeter repositories, run:
 
 ```sh
-if [ -f .github/AGENTS.md ] && [ ! -e AGENTS.md ] && [ ! -L AGENTS.md ]; then
-  ln -s .github/AGENTS.md AGENTS.md
+if [ -f .github/workspace/AGENTS.md ] && [ ! -e AGENTS.md ] && [ ! -L AGENTS.md ]; then
+  ln -s .github/workspace/AGENTS.md AGENTS.md
 fi
 ```
 
-This creates the workspace-level `AGENTS.md` symlink only when the shared
-instructions exist and no workspace-level `AGENTS.md` file or symlink is
-already present.
+This creates the workspace-level `AGENTS.md` symlink only when the workspace
+pointer exists and no workspace-level `AGENTS.md` file or symlink is already
+present. The pointer directs agents to `.github/AGENTS.md` for the shared
+workspace guidance.
 
 Deploy `peerimeter-service` using the [service setup guide](https://service.peerimeter.app/).
 Configure a strong `PEERIMETER_API_KEY` on the service and set
