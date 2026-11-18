@@ -3,8 +3,8 @@ name: updatews
 description: Update the Peerimeter workspace repositories to their latest main branches and clean up merged local branches.
 ---
 
-Update the workspace according to the **Keep the workspace up to date** section
-in `.github/AGENTS.md`.
+Update all four repositories in the workspace: `.github`, `peerimeter-agent`,
+`peerimeter-service`, and `peerimeter-dashboard`.
 
 1. Locate the workspace root containing `.github`, `peerimeter-agent`,
    `peerimeter-service`, and `peerimeter-dashboard`.
