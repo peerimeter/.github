@@ -12,6 +12,42 @@ This is the independent `peerimeter/.github` repository. It contains the Peerime
 - `docs/planning/progress.md`: overall progress and native verification evidence.
 - `docs/planning/codex-prompt.md`: historical implementation handoff; check current code and status before using it.
 
+## Workspace setup and maintenance
+
+### Workspace setup
+
+Start AI coding agents from the workspace root, the directory containing
+`.github`. Ensure the three code repositories are checked out there as sibling
+directories: [`peerimeter-agent`](https://github.com/peerimeter/peerimeter-agent),
+[`peerimeter-service`](https://github.com/peerimeter/peerimeter-service), and
+[`peerimeter-dashboard`](https://github.com/peerimeter/peerimeter-dashboard).
+If any are missing, check them out into the workspace root.
+
+Also make the workspace instructions available as `AGENTS.md` in the workspace
+root, pointing to `.github/workspace/AGENTS.md`. Prefer a symlink; if the OS or
+permissions do not allow one, copy the file there instead. If a root-level
+`AGENTS.md` already exists, inspect it and preserve its instructions while
+adding the shared workspace pointer; do not overwrite it. The pointer directs
+agents to `.github/AGENTS.md` for the shared workspace guidance.
+
+Make the `.agents` directory available from the workspace root as a symlink to
+`.github/.agents`, so Codex can discover the project skills when started from
+the workspace root. If `.github/.claude` exists, also symlink it into the
+workspace root as `.claude` so Claude Code can discover its project settings or
+skills. Preserve any existing root `.agents` or `.claude` path; inspect it
+before deciding whether it can be reused, and do not overwrite it.
+
+### Keep the workspace up to date
+
+Before starting work, update all four repositories in the workspace: `.github`,
+`peerimeter-agent`, `peerimeter-service`, and `peerimeter-dashboard`. In each
+repository, first check for uncommitted changes. Preserve any changes you need
+by committing or safely stashing them before switching branches. Then switch to
+`main`, fetch the latest remote updates, and fast-forward the local branch from
+`origin/main`. Finally, remove local branches that have already been merged
+into `origin/main`, and prune references to remote branches that have been
+deleted. Keep branches with unmerged commits.
+
 ## Working agreements
 
 - Keep planning claims aligned with the agent, service and dashboard READMEs, their current implementations, `docs/planning/progress.md`, and actual CI evidence. The shared tracker is in this repository; do not expect duplicate per-repository progress files. Distinguish implemented features, planned features, and unverified network scenarios.
