@@ -102,7 +102,7 @@
 | Language | Go 1.27.4 | Exact required toolchain for development, native CI and release builds; one independent Go module per repository |
 | HTTP | `net/http` + `chi` | Keep REST handlers thin |
 | Agent CLI | `spf13/cobra` | Pin the verified stable version; use Cobra/pflag for subcommands, arguments, help and shell completion |
-| Database | PostgreSQL | SQL migrations, `pgx` or `database/sql`; avoid excessive ORM magic |
+| Database | PostgreSQL | Goose versioned SQL migrations with GORM for typed persistence; keep allocation and uniqueness guarantees explicit in transactions and constraints |
 | MQTT | Mosquitto | MQTT v5 or v3.1.1, QoS 1 for notifications; TLS + per-device authorization |
 | WireGuard control | `wgctrl-go` | Linux kernel backend; OS-specific adapters for macOS/Windows |
 | Linux OS networking | netlink | Interface IPs/routes/firewall management |
@@ -720,6 +720,8 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 
 ### Phase 3 — `peerimeter-service` repository, control plane, enrollment bundle and config sync
 - [ ] Add Go server REST API, PostgreSQL migrations, network/peer registry and authoritative revisions.
+- [x] Move all service-persisted network metadata/config, node config and registration documents to a PostgreSQL backend, while retaining the selectable single-process file backend and a safe one-time import for existing JSON/YAML data. Implementation is under review; integration verification is tracked below and in `progress.md`.
+- [ ] Gate PostgreSQL persistence with integration tests against a dedicated Supabase `peerimeter-test` project or other dedicated PostgreSQL database; record the provider/project and observed test results in `progress.md`.
 - [ ] Generate one-time or short-lived enrollment credentials and versioned **Base64URL(JSON)** join bundles containing `api_url` and `enrollment_token`.
 - [ ] `peerimeter-agent join --token <bundle>` decodes, validates URL/expiry as applicable, exchanges enrollment secret for device credentials and downloads initial managed configuration; never requires separate `--server`.
 - [ ] Preserve static mode; online/managed mode must reuse the same WG reconciler and OS adapters.
