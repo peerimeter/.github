@@ -15,8 +15,9 @@ in `.github/AGENTS.md`.
    missing from `origin/main`, preserve them on a new branch before updating
    `main`, and report that branch.
 4. Return to the branch recorded before the update, unless it was `main`.
-5. Delete only other local branches already merged into `origin/main`. Preserve
-   every branch with unmerged commits and the branch being resumed.
+5. Delete only local branches already merged into `origin/main`, excluding
+   `main` and the branch being resumed. Preserve every branch with unmerged
+   commits.
 6. Report each repository's result, including skipped repositories, preserved
    commits, and branches that could not be updated safely.
 
