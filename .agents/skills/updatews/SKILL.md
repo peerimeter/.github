@@ -8,15 +8,17 @@ in `.github/AGENTS.md`.
 
 1. Locate the workspace root containing `.github`, `peerimeter-agent`,
    `peerimeter-service`, and `peerimeter-dashboard`.
-2. Inspect the working tree and current branch in each repository. Do not switch
-   branches in a repository with uncommitted changes. Leave it untouched and
-   report it so the user can decide how to preserve those changes.
+2. Record the current branch and inspect the working tree in each repository.
+   Leave repositories with uncommitted changes untouched and report them.
 3. In each clean repository, fetch from `origin` and prune deleted remote
-   references, switch to `main`, then fast-forward from `origin/main`.
-4. Delete only local branches that are already merged into `origin/main`.
-   Preserve every branch with unmerged commits.
-5. Report each repository's result, including any skipped repository or
-   branch that could not be updated safely.
+   references. Fast-forward local `main` when possible. If `main` has commits
+   missing from `origin/main`, preserve them on a new branch before updating
+   `main`, and report that branch.
+4. Return to the branch recorded before the update, unless it was `main`.
+5. Delete only other local branches already merged into `origin/main`. Preserve
+   every branch with unmerged commits and the branch being resumed.
+6. Report each repository's result, including skipped repositories, preserved
+   commits, and branches that could not be updated safely.
 
 Use the tools and Git client available on the current operating system. Do not
 assume a shell, terminal, or command syntax specific to one OS.
