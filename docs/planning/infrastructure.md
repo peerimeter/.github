@@ -1,7 +1,7 @@
 # Peerimeter infrastructure plan
 
-**Status:** evaluation and proposed first deployment shape  
-**Checked:** 2026-11-18  
+**Status:** evaluation and proposed first deployment shape
+**Checked:** 2026-11-19
 **Scope:** free-tier suitability and Terraform coverage for Render, Railway,
 Supabase, Better Stack, and a managed MQTT broker. Prices and quotas change;
 recheck provider and plan details before provisioning.
@@ -64,8 +64,10 @@ already provisioned. Configure both Railway instances from the same
 `peerimeter-service` image/release and pass each the same
 `PEERIMETER_STORAGE_BACKEND=postgres` and Supabase-backed
 `PEERIMETER_DATABASE_URL` secret. The public API URL and Better Stack monitor
-target should be the Render load balancer's HTTPS address; monitor
-`/healthz` (the service currently returns HTTP 204 when healthy).
+target should be the Render load balancer's HTTPS address. Better Stack should
+monitor `/health` on that public URL. The service itself currently exposes
+`/healthz` and returns HTTP 204 when healthy; verify the load-balancer image's
+`/health` behavior with a configured backend before resuming the monitor.
 
 Before relying on this topology, validate that the load balancer image accepts
 the supplied comma-separated `BACKEND_URLS`, binds the port Render supplies via
@@ -147,6 +149,25 @@ the baseline and EMQX Cloud Serverless remains an evaluation candidate.
   plan's quotas. Add log/trace export only after reviewing retention and
   sensitive-field scrubbing.
 
+### CI/CD secrets
+
+Use Bitwarden Secrets Manager as the source of truth for provider credentials
+and production service secrets. GitHub Actions workflows should retrieve only
+the values they need at runtime, such as `BETTERUPTIME_API_TOKEN`,
+`RENDER_API_KEY`, Cloudflare and Railway credentials, Supabase management or
+database credentials, `PEERIMETER_API_KEY`, and other service-specific secrets.
+
+Use separate Bitwarden projects and machine accounts for development and
+production, scoped to the smallest set of required secrets. Store the
+Bitwarden machine account access token as the encrypted GitHub Actions secret
+`BWS_ACCESS_TOKEN`; use it only to bootstrap the workflow's Bitwarden access.
+Keep provider credentials and application secrets in Bitwarden rather than
+GitHub repository variables, source files, Terraform configuration/state, or
+workflow logs. Pass retrieved values only to the steps that need them and
+never print them. Rotate and revoke exposed provider credentials and access
+tokens. This is the target design; Bitwarden projects, machine accounts, and
+secret entries still need to be provisioned.
+
 ## Terraform boundaries
 
 Use separate Terraform roots/states for `development` and `production`, with
@@ -187,6 +208,9 @@ Before choosing a production target:
 
 ## Primary references
 
+- [Bitwarden Secrets Manager CLI](https://bitwarden.com/help/secrets-manager-cli/)
+- [Bitwarden machine account access tokens](https://bitwarden.com/help/access-tokens/)
+- [Bitwarden GitHub Actions integration](https://bitwarden.com/help/github-actions-integration/)
 - [Render Terraform provider](https://render.com/docs/terraform-provider)
 - [Render free service limits](https://render.com/docs/free)
 - [Render web services and prebuilt images](https://render.com/docs/web-services)
