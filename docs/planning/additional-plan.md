@@ -377,3 +377,29 @@ service operation.
 - Acceptance: at least two networks managed simultaneously by one service on every
   supported OS; verify independent traffic, join/leave, update, restart, offline cache,
   one-network failure isolation, conflict rejection and complete owned-resource cleanup.
+
+## A13. Designated major-release compatibility cleanup
+
+Prepare a dedicated major release that removes migration and backward-compatibility
+code retained only for older Peerimeter releases. This is planned work; do not remove
+these paths as part of an ordinary release. The Windows `pma.exe` inventory and
+self-update compatibility marked `TODO(next major)` in `peerimeter-agent` is one
+current example.
+
+- Before implementation, inventory obsolete compatibility readers, one-time data
+  migrations, legacy filenames/formats, fallback behavior and `TODO(next major)`
+  markers across `peerimeter-agent`, `peerimeter-service` and
+  `peerimeter-dashboard`. Record each item and the release/version range it supports.
+- Confirm the target major version and the end of support for the older formats or
+  releases. Remove only code whose compatibility window has ended; retain current
+  formats, current APIs and required fresh-install behavior.
+- Keep canonical forward database/schema migrations needed to create or upgrade a
+  supported installation. Remove only obsolete compatibility/import paths after
+  their input formats are explicitly retired. Preserve existing user data.
+- Make separate reviewable PRs in each owning repository, with CI covering clean
+  installs, current upgrades, and the removal of obsolete fallback paths. Update
+  user and operator documentation to state the new minimum supported version and
+  any required upgrade path.
+- Acceptance: every inventoried item has a resolution, no in-scope obsolete
+  compatibility shim remains, supported upgrade paths pass CI, and independent
+  review confirms no active data or API migration was removed accidentally.
