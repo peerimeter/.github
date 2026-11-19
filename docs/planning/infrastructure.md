@@ -65,9 +65,12 @@ already provisioned. Configure both Railway instances from the same
 `PEERIMETER_STORAGE_BACKEND=postgres` and Supabase-backed
 `PEERIMETER_DATABASE_URL` secret. The public API URL and Better Stack monitor
 target should be the Render load balancer's HTTPS address. Better Stack should
-monitor `/health` on that public URL. The service itself currently exposes
-`/healthz` and returns HTTP 204 when healthy; verify the load-balancer image's
-`/health` behavior with a configured backend before resuming the monitor.
+monitor `/health` on that public URL. The service exposes `/healthz` as a
+database-independent liveness check (`200` JSON `{"success":true}`) and
+`/health` as a database readiness check (`204` when ready). Before considering
+the monitor behavior fully verified, check that the load balancer returns an
+unhealthy status when all Railway backends are unavailable; this failure-path
+check has not been run against the live deployment.
 
 Before relying on this topology, validate that the load balancer image accepts
 the supplied comma-separated `BACKEND_URLS`, binds the port Render supplies via
