@@ -55,10 +55,8 @@ CA_TAX_RATE = 0.0825
 def taxed_values(transactions: list[Transaction]) -> list[float]:
     return [t.value * (1 + CA_TAX_RATE) for t in transactions if t.is_taxable]
 
-def raw_values(transactions: list[Transaction], *, include_values: bool = False) -> list[float]:
-    if not include_values:
-        return []
-    return [t.value for t in transactions]
+def empty_values() -> list[float]:
+    return []
 ```
 
 Fixes: N1, C3, F3, G25, G23, PY3.
