@@ -22,7 +22,7 @@ Update all four repositories in the workspace: `.github`, `peerimeter-agent`,
    every workspace checkout and every worktree used by the current update,
    including one whose branch is merged. Remove a different worktree only when
    there is evidence it is unused, its checked-out branch is merged into
-   `origin/main`, and it has no tracked, untracked, or ignored files. Check
+   `origin/main`, and it has no changes to tracked or untracked files. Check
    ignored files explicitly before removal; preserve them unless their contents
    are confirmed disposable. Remove approved targets only with
    `git worktree remove <path>`. Do not run `git worktree prune` or delete
