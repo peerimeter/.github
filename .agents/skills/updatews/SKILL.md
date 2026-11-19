@@ -18,12 +18,17 @@ Update all four repositories in the workspace: `.github`, `peerimeter-agent`,
 5. Delete only local branches already merged into `origin/main`, excluding
    `main` and the branch being resumed. Preserve every branch with unmerged
    commits.
-6. Inspect linked worktrees in each repository. Prune only worktrees that are
-   clearly unused: they are not the primary worktree, are clean, and their
-   checked-out branch is already merged into `origin/main`. Remove them with
-   Git's worktree removal/prune commands; do not delete worktree directories
-   manually. Preserve worktrees with uncommitted changes, unmerged commits,
-   detached HEAD, or any ambiguous state, and report why they were kept.
+6. Inspect linked worktrees only in repositories that passed step 2. Exclude
+   every workspace checkout and every worktree used by the current update,
+   including one whose branch is merged. Remove a different worktree only when
+   there is evidence it is unused, its checked-out branch is merged into
+   `origin/main`, and it has no tracked, untracked, or ignored files. Check
+   ignored files explicitly before removal; preserve them unless their contents
+   are confirmed disposable. Remove approved targets only with
+   `git worktree remove <path>`. Do not run `git worktree prune` or delete
+   worktree directories manually. Preserve missing worktree entries, worktrees
+   with uncommitted changes or unmerged commits, detached HEAD, and any
+   ambiguous or potentially active worktree; report why each was kept.
 7. Report each repository's result, including skipped repositories, preserved
    commits, and branches that could not be updated safely.
 
