@@ -777,6 +777,9 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 - [ ] Audit enrollment, configuration handling, authorization and gateway policies.
 - [ ] Document diagnostics, operating limits, installation, security model and NAT restrictions.
 - [ ] Repeat performance, E2E and failure recovery tests; publish supported-platform matrix.
+- [ ] Prepare the designated major release by inventorying and removing obsolete
+  migration and backward-compatibility code across the independent repositories;
+  see [A13](additional-plan.md#a13-designated-major-release-compatibility-cleanup).
 
 **Done when:** deployment and agent operation are reproducible, no relay or desktop UI is included.
 
