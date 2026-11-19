@@ -55,7 +55,9 @@ CA_TAX_RATE = 0.0825
 def taxed_values(transactions: list[Transaction]) -> list[float]:
     return [t.value * (1 + CA_TAX_RATE) for t in transactions if t.is_taxable]
 
-def raw_values(transactions: list[Transaction]) -> list[float]:
+def raw_values(transactions: list[Transaction], *, include_values: bool = False) -> list[float]:
+    if not include_values:
+        return []
     return [t.value for t in transactions]
 ```
 
