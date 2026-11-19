@@ -67,7 +67,7 @@ already provisioned. Configure both Railway instances from the same
 target should be the Render load balancer's HTTPS address. Better Stack should
 monitor `/health` on that public URL. The service exposes `/healthz` as a
 database-independent liveness check (`200` JSON `{"success":true}`) and
-`/health` as a database readiness check (`204` when ready). Before considering
+`/health` as a database readiness check (`200` JSON `{"success":true}` when ready; `503` JSON on database failure, with the underlying error logged). Before considering
 the monitor behavior fully verified, check that the load balancer returns an
 unhealthy status when all Railway backends are unavailable; this failure-path
 check has not been run against the live deployment.
