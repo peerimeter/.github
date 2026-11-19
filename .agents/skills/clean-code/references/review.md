@@ -38,7 +38,7 @@ issues". The goal is a short, prioritized, actionable list, not an exhaustive au
 
 ### Blocker
 - **G4 - tests muted** - `tests/test_billing.py:42`: `@skip` hides a failing case.
-  Fix the cause or delete the test with a reason.
+  Fix the cause. Delete the test only when it is obsolete or invalid, and state that reason.
 
 ### Major
 - **G5 - duplication** - `invoice.py:18-31` and `credit_note.py:22-35` compute tax identically.
@@ -73,5 +73,7 @@ Rules for the format:
 
 ## Applying fixes after a review
 
-If the user asks you to apply the fixes, switch to [refactor.md](refactor.md): fix Blockers
-first, then Majors, one finding at a time, and re-run the tests between steps.
+If the user asks you to apply fixes, route behavior-changing bug fixes (including boundary
+fixes that alter results) through a bug-fix workflow that preserves the regression test. For
+behavior-preserving cleanup, use [refactor.md](refactor.md): fix Blockers first, then Majors,
+one finding at a time, and re-run the tests between steps.
