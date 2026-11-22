@@ -378,19 +378,33 @@ service operation.
   supported OS; verify independent traffic, join/leave, update, restart, offline cache,
   one-network failure isolation, conflict rejection and complete owned-resource cleanup.
 
-## A13. Designated major-release compatibility cleanup
+## A13. Designated breaking minor-release compatibility cleanup
 
-Prepare a dedicated major release that removes migration and backward-compatibility
-code retained only for older Peerimeter releases. This is planned work; do not remove
-these paths as part of an ordinary release. The Windows `pma.exe` inventory and
-self-update compatibility marked `TODO(next major)` in `peerimeter-agent` is one
-current example.
+Prepare a dedicated breaking minor release that removes migration and
+backward-compatibility code retained only for older Peerimeter releases. Peerimeter
+is still in `0.y.z`, so a breaking change increments the minor version (for example,
+`v0.14.0` to `v0.15.0`), rather than moving to `v1.0.0`. The GitHub release
+description must prominently state **Breaking changes included** and explain the
+removed compatibility paths and required operator action. Keep the cleanup in its
+designated breaking minor release. The Windows `pma.exe`
+inventory and self-update compatibility marked for the next breaking release in
+`peerimeter-agent` are current examples.
+
+Release target for this cleanup is `peerimeter-agent v0.39.0` from the current
+`v0.38.1` line and `peerimeter-service v0.15.0` from `v0.14.0`, if service
+compatibility code is retired there. For the agent, older installation inventories,
+markers, self-update transaction files, `pma.exe`, and local `network.json` state
+are supported only through `v0.38.1`; operators must uninstall with that release
+before installing `v0.39.0`. The service's JSON file-store import into PostgreSQL
+is a data-preserving upgrade path and remains supported unless a separately
+reviewed migration plan replaces it. No obsolete compatibility fallback was found
+in the dashboard during this inventory.
 
 - Before implementation, inventory obsolete compatibility readers, one-time data
-  migrations, legacy filenames/formats, fallback behavior and `TODO(next major)`
-  markers across `peerimeter-agent`, `peerimeter-service` and
-  `peerimeter-dashboard`. Record each item and the release/version range it supports.
-- Confirm the target major version and the end of support for the older formats or
+  migrations, legacy filenames/formats, fallback behavior and release-cleanup markers
+  across `peerimeter-agent`, `peerimeter-service` and `peerimeter-dashboard`. Record
+  each item and the release/version range it supports.
+- Confirm the target minor version and the end of support for the older formats or
   releases. Remove only code whose compatibility window has ended; retain current
   formats, current APIs and required fresh-install behavior.
 - Keep canonical forward database/schema migrations needed to create or upgrade a
