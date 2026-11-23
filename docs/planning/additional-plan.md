@@ -394,14 +394,14 @@ Release target for this cleanup is `peerimeter-agent v0.39.0` from the current
 `v0.38.1` line and `peerimeter-service v0.15.0` from `v0.14.0`, if service
 compatibility code is retired there. For the agent, older installation inventories,
 markers, self-update transaction files, `pma.exe`, and local `network.json` state
-are supported only through `v0.38.1`; operators must uninstall with that release
-before installing `v0.39.0`. Stop the running agent before uninstalling, then
-securely back up the operator configuration, managed service key, managed network
-metadata, and persistent state;
-restore them into the corresponding protected locations after installing the new
-release, preserving restrictive file permissions. Convert `network.json` to
-`network.yaml` by copying its `network_id` and `interface_name` values before the
-upgrade. The service's JSON file-store import into PostgreSQL
+are supported only through `v0.38.1`. Upgrade to `v0.39.0` in this order: stop
+the running agent; securely back up the operator configuration, managed service
+key, managed network metadata, and persistent state; uninstall with `v0.38.1`;
+install `v0.39.0`; then restore the backed-up data into its protected locations,
+preserving restrictive file permissions. If you need to retain a selection from
+`network.json`, create `network.yaml` in the same state directory with its
+`network_id` and `interface_name` values before upgrading. The service's JSON
+file-store import into PostgreSQL
 is a data-preserving upgrade path and remains supported unless a separately
 reviewed migration plan replaces it. No obsolete compatibility fallback was found
 in the dashboard during this inventory.
