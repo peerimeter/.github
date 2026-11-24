@@ -397,7 +397,8 @@ from `v0.39.0` and `peerimeter-service v0.15.0` from `v0.14.1`. The agent also
 retires the combined Unix service layout migration. Upgrade by stopping the
 agent, backing up operator configuration and managed credentials/state,
 uninstalling with `v0.39.0`, installing `v0.40.0`, then restoring only
-current-format state with restrictive permissions. The service retires
+current-format state with restrictive permissions. Exclude the old state's
+`.profile` marker; the new registration creates a marker for the new install. The service retires
 file-store imports into PostgreSQL and old inline node/registration sidecar
 readers. Keep the file backend for existing file data, or export and import it
 manually before changing backends. PostgreSQL's forward schema migrations remain
