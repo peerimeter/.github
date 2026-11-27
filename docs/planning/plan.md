@@ -37,7 +37,7 @@
 - MQTT-over-TLS event notifications for fast updates; lost notifications must be repaired by periodic reconciliation.
 - Direct endpoint discovery via STUN, endpoint candidate exchange, NAT traversal/hole punching where practical, and robust reaction to local/public IP and port changes.
 - Full handling of WireGuard state without restarting the interface on normal peer changes.
-- GitHub OAuth SSO for dashboard users is implemented in the service and dashboard: active membership in one configured GitHub organization team is checked at login. A session remains valid for up to 12 hours after a member is removed from the team, or until logout or service restart. API-key login remains an environment-controlled fallback. Agent enrollment authorization and device authentication remain separate.
+- GitHub OAuth SSO for dashboard users is implemented in the service and dashboard: active membership in one configured GitHub organization team is checked at login. Signed stateless sessions expire after 12 hours; removing a member does not revoke an existing cookie, which remains valid until expiry or signing-secret rotation. Logout clears the browser cookie. API-key dashboard login exchanges the key for the same session format and defaults off when SSO is configured. Agent enrollment authorization and device authentication remain separate.
 - Modern browser-only React dashboard with network/peer management, observable peer graph, current state, and diagnostics.
 - External **standard WireGuard clients** connecting to a selected Peerimeter gateway peer; initially NAT/SNAT mode, later optional routed mode. The gateway may forward only to explicitly authorized mesh destinations.
 - Docker Compose deployment of server, PostgreSQL, and MQTT broker.
@@ -109,7 +109,7 @@
 | STUN | `pion/stun` (or equivalent) | Validate UDP socket/mapping behavior before relying on discovered ports |
 | Web | Vite + React + TypeScript | Separate static app in `peerimeter-dashboard`; exact allowlisted CORS when hosted apart from the API |
 | UI | Tailwind CSS + shadcn/ui | Peer graph via React Flow / XYFlow |
-| Auth | GitHub OAuth team SSO plus optional shared service API key | SSO uses short-lived HttpOnly sessions; API-key login defaults off when SSO is configured |
+| Auth | GitHub OAuth team SSO plus optional shared service API key | SSO and API-key dashboard login use short-lived HttpOnly signed sessions; API-key login defaults off when SSO is configured |
 | Tests | Go `testing`, `httptest`, container/network integration tests | Browser E2E optional later |
 | Deployment | Docker Compose | Server, PostgreSQL, Mosquitto, reverse proxy/TLS documented |
 
@@ -602,7 +602,7 @@ Use conventional HTTP status semantics and consistent error envelopes. Implement
 - Build with Vite/React/TypeScript. Serve the static assets independently or through a reverse proxy alongside the service; do not embed the frontend in the Go binary.
 - When the app and API use different origins, enable service CORS only for exact trusted origins; never use wildcard origins.
 - Pages: Overview, Networks, Peers, Topology Graph, Gateways, External Clients, Diagnostics, Settings.
-- The dashboard supports a shared API key stored only for the active browser tab session and GitHub OAuth SSO restricted by service-side team membership checks. API-key login defaults off when SSO is configured. SSO currently grants team members the same management access; per-user roles and account management remain future work.
+- The dashboard exchanges a shared API key for a signed cookie session and does not store the key in browser session storage. GitHub OAuth SSO is restricted by service-side team membership checks. API-key login defaults off when SSO is configured. SSO currently grants team members the same management access; per-user roles and account management remain future work.
 - Topology graph uses **observed actual** connectivity, not merely desired mesh edges. Show online/offline, direct connectivity, last seen, last handshake, actual measured RTT where available, gateway role, and endpoint/reconnect history.
 - Avoid displaying public endpoint data to unauthorized users. Mask secrets. Do not invent metrics when no agent measurement exists.
 - Real-time updates via SSE initially (simpler than WS); reconnect with backoff and initial snapshot reload.
@@ -723,13 +723,14 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 
 ### Phase 3 — `peerimeter-service` repository, control plane, enrollment bundle and config sync
 - [ ] Add Go server REST API, PostgreSQL migrations, network/peer registry and authoritative revisions.
-- [x] Move all service-persisted network metadata/config, node config and registration documents to a PostgreSQL backend, while retaining the selectable single-process file backend and a safe one-time import for existing JSON/YAML data. Implementation is under review; integration verification is tracked below and in `progress.md`.
+- [x] Move all service-persisted network metadata/config, node config and registration documents to a PostgreSQL backend, while retaining the selectable single-process file backend. Switching existing file data to PostgreSQL requires an operator-managed export/import; no automatic import path is provided. PostgreSQL implementation is merged; integration verification is tracked below and in `progress.md`.
 - [ ] Gate PostgreSQL persistence with integration tests against a dedicated Supabase `peerimeter-test` project or other dedicated PostgreSQL database; record the provider/project and observed test results in `progress.md`.
 - [ ] Generate one-time or short-lived enrollment credentials and versioned **Base64URL(JSON)** join bundles containing `api_url` and `enrollment_token`.
 - [ ] `peerimeter-agent join --token <bundle>` decodes, validates URL/expiry as applicable, exchanges enrollment secret for device credentials and downloads initial managed configuration; never requires separate `--server`.
 - [ ] Preserve static mode; online/managed mode must reuse the same WG reconciler and OS adapters.
-- [ ] One agent service must manage multiple enrolled networks concurrently on Linux, macOS and Windows. Scope keys, credentials, config revisions, interface ownership, reconciliation and lifecycle per network; support explicit CLI network selection and an all-network overview. Joining, syncing, stopping or leaving one network must preserve the others. Reject ambiguous selections, interface/port collisions and conflicting routes before mutation. Verify restart recovery, offline cached operation and failure isolation with at least two networks; see additional-plan.md A12.
-- [x] Agent `sync --network-id <network-id>` refreshes the local node registration and endpoint candidate before fetching the current peer list, then applies the peers to the active running configuration. If exactly one joined network is saved, the flag is optional; with multiple saved networks it is required. Sync verifies the selected network matches the running agent. The agent `config` CLI command was removed; sync does not upload peer configuration.
+- [x] Run configured network profiles concurrently in separate agent runtimes on Linux, macOS and Windows. `run` and `daemon` support all configured networks; status, stop and sync support all networks or a selected network. Agent PR #102 serializes shared profile registration during startup/readiness; its native CI passed on all three platforms.
+- [ ] Complete network-scoped lifecycle across join, connect/disconnect and leave, including preserving other networks, revocation, offline recovery and failure isolation; see additional-plan.md A12.
+- [x] Agent `sync` refreshes registrations and endpoints before fetching peer lists and applies updates to active configurations. It syncs all joined networks by default; `--network-id <network-id>` selects one. The agent `config` CLI command was removed; sync does not upload peer configuration.
 - [ ] Extend sync to select and reconcile one network within a concurrent multi-network service, with per-network revisions, cached offline operation and notification recovery.
 - [ ] Integrate MQTT/TLS notifications and periodic API re-sync; test offline and missed-event reconciliation.
 - [ ] Add managed host-file entries for peer DNS names using a maintained Go hosts-file library. Derive each peer's hostname from a configurable template such as `$hostName.$networkName` and map it to that peer's **WireGuard tunnel address(es)** from its configured interface addresses. Do not put LAN/private-underlay addresses in these entries. Synchronize changes when peers join, rename, change WireGuard address, or leave. Only edit an agent-owned marked block; preserve unrelated hosts-file content, make updates idempotent and atomic, validate DNS labels/templates and address conflicts, and remove only managed entries on leave/uninstall. Verify permissions, restart recovery and behavior on Linux, macOS and Windows; clearly report when required privileges prevent an update.
@@ -739,28 +740,28 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 ### Phase 4 — STUN, direct NAT traversal, self-healing (critical path)
 - [ ] Validate STUN socket mapping versus actual WG source port on every relevant backend.
 - [ ] Discover each agent's LAN/private-underlay addresses separately from its WireGuard tunnel addresses; exchange and select reachable same-LAN addresses as direct peer endpoints, with tests proving same-network peers use their internal addresses when available.
-- [x] Agents register their WireGuard public key, listen port, primary physical interface and local addresses. The file backend persists each node's registration as its own YAML file. PostgreSQL registration storage in service PR #16 is under review and will store these documents in JSONB. `sync` refreshes the registration and best-effort public endpoint before fetching peers; if STUN cannot bind the tunnel's UDP port, it retains the last registered public endpoint. Never upload private keys.
+- [x] Agents register their WireGuard public key, listen port, primary physical interface and local addresses. The file backend persists each node's registration as its own YAML file. Merged service PR #16 stores PostgreSQL registrations in JSONB. `sync` refreshes the registration and best-effort public endpoint before fetching peers; if STUN cannot bind the tunnel's UDP port, it retains the last registered public endpoint. Never upload private keys.
 - [ ] Exchange public endpoint candidates and coordinate bounded, simultaneous UDP hole-punch attempts; apply selected endpoints to the existing WireGuard session without exposing tunnel traffic to the service.
 - [ ] Select only the primary physical ethernet/Wi-Fi interface for local CIDR reporting; exclude loopback, virtual/tunnel, container, and secondary interfaces. Do not treat a shared public IP or overlapping RFC1918 prefix as proof of reachability.
 - [ ] Implement endpoint candidate discovery/exchange, dynamic endpoint updates, network events, health probes and recoverable state machine.
 - [ ] Test public IP/port changes, packet loss, sleep/wake, control-plane outages and failed direct connections.
 - [ ] Keep **no relay** policy; report unsupported NAT/firewall cases transparently.
 
-**Phase 3/4 user-prioritized increment (2026-11-16; sync registration completed 2026-11-17):** `sync` publishes the current node registration before peer exchange. Agents report only their primary physical ethernet/Wi-Fi interface's addresses/CIDRs; the current file backend stores registrations separately as YAML. Service PR #16 is adding PostgreSQL JSONB storage and remains under review. This does not complete automatic hole punching or network-change recovery. Preserve API-free static mode. Connectivity remains direct-only; symmetric NAT and UDP-blocking firewalls remain unsupported and must be reported, never silently relayed.
+**Phase 3/4 user-prioritized increment (2026-11-16; sync registration completed 2026-11-17):** `sync` publishes the current node registration before peer exchange. Agents report only their primary physical ethernet/Wi-Fi interface's addresses/CIDRs; the file backend stores registrations separately as YAML and merged service PR #16 adds PostgreSQL JSONB storage. This does not complete automatic hole punching or network-change recovery. Preserve API-free static mode. Connectivity remains direct-only; symmetric NAT and UDP-blocking firewalls remain unsupported and must be reported, never silently relayed.
 
 **Done when:** same-LAN peers can discover and use reachable internal endpoints, and documented public-IP/port-change scenarios recover autonomously where direct connectivity is feasible.
 
 ### Phase 5 — Browser dashboard and GitHub SSO
 - [x] Separate React/TypeScript dashboard repository with API-key sign-in, network creation/listing, registered peer listing and metadata editing, plus Linux/macOS/Windows join commands. Implementation is in dashboard PR #1.
 - [x] Service CORS allowlist from environment for exact trusted browser origins, network-wide peer listing, and dashboard default API URL from `VITE_SERVICE_URL`. Service implementation is in PR #10.
-- [x] Add GitHub OAuth sign-in requiring active membership in a configurable organization team at login; create HttpOnly sessions, verify browser-bound OAuth state, and protect session-authenticated writes with a trusted dashboard-origin check. Team membership is not rechecked during a session; sessions remain valid up to 12 hours after team removal, or until logout or service restart. Service PR #33 and dashboard PR #19 are merged.
+- [x] Add GitHub OAuth sign-in requiring active membership in a configurable organization team at login; use browser-bound signed OAuth state and stateless HttpOnly sessions, and protect session-authenticated writes with a trusted dashboard-origin check. Team membership is not rechecked during a session; copied cookies remain valid until their 12-hour expiry or signing-secret rotation. Service PRs #33/#34 and dashboard PRs #19/#20 are merged. Production SSO was confirmed working by the user on 2026-11-27.
 - [x] Make dashboard API-key login configurable from the service environment; it defaults off when GitHub SSO is configured and remains an explicit fallback.
 - [ ] Add per-user roles and account management. Current authorized team members receive the same management access.
 - [ ] Add topology graph, diagnostics and service-backed live state as those API capabilities become available.
 - [ ] Show actual connection observations and diagnostics, not fabricated live status.
 - [ ] Add production static hosting and document HTTPS reverse-proxy deployment.
 
-**Done when:** users can securely sign in, administer networks/peers, and create join bundles through the browser; SSO implementation is merged, but OAuth App registration and production environment configuration still need deployment verification. Observed-state graph and diagnostics must match actual API capabilities.
+**Done when:** users can securely sign in, administer networks/peers, and create join bundles through the browser; production SSO is configured and verified. Per-user roles, observed-state graph, diagnostics and hosting documentation remain open and must match actual API capabilities.
 
 ### Phase 6 — External WireGuard clients via Linux gateway
 - [ ] Gateway external WG interface, separate address pool and client registration/revocation.
@@ -831,9 +832,9 @@ Update this section whenever a phase is finished or an important design constrai
 | 0 — Baseline | Complete | Native Go 1.27.4 baseline and backend feasibility verified on all three; operational tunnel/IPC commands belong to Phase 1 |
 | 1 — Offline WG on Linux/macOS/Windows | Complete (core) | Native agent/service/installer scope passed independent review; latest build/test and integration CI passed; native verification of later `wg show` CLI changes and the STUN add-on remains pending |
 | 2 — Agent self-update | Complete | Native updater build/test, installed-binary E2E, integration, package and review gates passed in agent PRs #37–#39 |
-| 3 — Server + sync | In progress | Service API, managed agent join and registration sync are implemented; concurrent service-driven multi-network operation and durable scoped credentials remain open. |
+| 3 — Server + sync | In progress | Concurrent agent network runtimes and all-network sync are implemented; lifecycle/revocation, service-side revisions and durable scoped credentials remain open. |
 | 4 — NAT + self-healing | In progress | Direct endpoint discovery is partial; native LAN/NAT traversal and network-change recovery remain unverified. |
-| 5 — Web dashboard | In progress | API-key and GitHub team SSO sign-in are implemented; production OAuth configuration, user roles, topology, diagnostics and hosting verification remain open. |
+| 5 — Web dashboard | In progress | API-key and GitHub team SSO sign-in are implemented and production login was user-verified; user roles, topology, diagnostics and hosting documentation remain open. |
 | 6 — External gateway | Not started | |
 | 7 — Cross-platform resilience | Not started | |
 | 8 — Release hardening | Not started | |
