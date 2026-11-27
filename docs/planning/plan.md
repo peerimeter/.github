@@ -290,12 +290,11 @@ Implement diff-based, idempotent reconcile. Normal endpoint/peer updates **must 
 
 ## 7. Configuration synchronization
 
-The current agent implementation provides explicit, synchronous `sync` for a
-joined network: refresh the local node registration, fetch current peer
-records, then apply those peers to the configuration used by the running
-agent. It does not upload the fetched peer configuration. This is an initial
-single-running-network increment; revision tracking, background recovery and
-concurrent managed networks below are planned work.
+The current agent runs configured networks concurrently and `sync` refreshes
+registrations, fetches peer records, and applies them to active configurations
+for all joined networks or a selected network. It does not upload fetched peer
+configuration. Service-authoritative revision tracking, notification-driven
+updates and background recovery below remain planned work.
 
 ### Canonical flow
 
@@ -754,7 +753,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 ### Phase 5 — Browser dashboard and GitHub SSO
 - [x] Separate React/TypeScript dashboard repository with API-key sign-in, network creation/listing, registered peer listing and metadata editing, plus Linux/macOS/Windows join commands. Implementation is in dashboard PR #1.
 - [x] Service CORS allowlist from environment for exact trusted browser origins, network-wide peer listing, and dashboard default API URL from `VITE_SERVICE_URL`. Service implementation is in PR #10.
-- [x] Add GitHub OAuth sign-in requiring active membership in a configurable organization team at login; use browser-bound signed OAuth state and stateless HttpOnly sessions, and protect session-authenticated writes with a trusted dashboard-origin check. Team membership is not rechecked during a session; copied cookies remain valid until their 12-hour expiry or signing-secret rotation. Service PRs #33/#34 and dashboard PRs #19/#20 are merged. Production SSO was confirmed working by the user on 2026-11-27.
+- [x] Add GitHub OAuth sign-in requiring active membership in a configurable organization team at login; use browser-bound signed OAuth state and stateless HttpOnly sessions, and protect session-authenticated writes with a trusted dashboard-origin check. Team membership is not rechecked during a session; copied cookies remain valid until their 12-hour expiry or signing-secret rotation. The dashboard shows the username and login method. Service PRs #33/#34 and dashboard PRs #19–#21 are merged. Production SSO was confirmed working by the user on 2026-11-27.
 - [x] Make dashboard API-key login configurable from the service environment; it defaults off when GitHub SSO is configured and remains an explicit fallback.
 - [ ] Add per-user roles and account management. Current authorized team members receive the same management access.
 - [ ] Add topology graph, diagnostics and service-backed live state as those API capabilities become available.
