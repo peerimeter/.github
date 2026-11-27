@@ -18,7 +18,7 @@ The project is organized around three independent code repositories:
 
 Connections are direct only: UDP hole punching is best effort, with no TURN or relay fallback, so restrictive NAT or firewalls may prevent connectivity.
 
-**Status:** Service-managed `join` and peer reconciliation are in [agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51) and [service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7). The agent's `config` CLI command, including its `pull/push` operations, was removed in [agent PR #69](https://github.com/peerimeter/peerimeter-agent/pull/69); [PR #68](https://github.com/peerimeter/peerimeter-agent/pull/68) lets `sync` apply refreshed peers to the running configuration, and [PR #70](https://github.com/peerimeter/peerimeter-agent/pull/70) refreshes the local node registration before fetching peers. `sync --network-id` selects the joined network; it defaults to the only joined network and is required when multiple are saved. The selected network must still match the running agent: simultaneous multi-network service operation remains planned. The dashboard's API-key and GitHub team SSO sign-in are in [dashboard PR #1](https://github.com/peerimeter/peerimeter-dashboard/pull/1) and [PR #19](https://github.com/peerimeter/peerimeter-dashboard/pull/19); service-side GitHub OAuth, team-membership enforcement and password-login configuration are in [service PR #33](https://github.com/peerimeter/peerimeter-service/pull/33). Its CORS allowlist, network-wide peer-list API, local development URLs, and configurable join URL HTTPS requirement are in [service PR #10](https://github.com/peerimeter/peerimeter-service/pull/10). The service supports file storage by default and PostgreSQL with migrations and legacy-store import ([PR #16](https://github.com/peerimeter/peerimeter-service/pull/16), [PR #17](https://github.com/peerimeter/peerimeter-service/pull/17)). API-key login can be disabled when SSO is configured; the key remains for agent-scoped tokens. The agent supports one active network per runtime and direct-only peer connections. Per-user roles, per-device credentials, revocation/leave, MQTT, and production-verified multi-instance operation remain future work. OAuth App registration and live SSO configuration are still pending.
+**Status:** Service-managed `join` and peer reconciliation are in [agent PR #51](https://github.com/peerimeter/peerimeter-agent/pull/51) and [service PR #7](https://github.com/peerimeter/peerimeter-service/pull/7). The agent's `config` CLI command, including its `pull/push` operations, was removed in [agent PR #69](https://github.com/peerimeter/peerimeter-agent/pull/69); [PR #68](https://github.com/peerimeter/peerimeter-agent/pull/68) lets `sync` apply refreshed peers to the running configuration, and [PR #70](https://github.com/peerimeter/peerimeter-agent/pull/70) refreshes the local node registration before fetching peers. `sync --network-id` selects the joined network; it defaults to the only joined network and is required when multiple are saved. The selected network must still match the running agent: simultaneous multi-network service operation remains planned. The dashboard's API-key and GitHub team SSO sign-in are in [dashboard PR #1](https://github.com/peerimeter/peerimeter-dashboard/pull/1) and [PR #19](https://github.com/peerimeter/peerimeter-dashboard/pull/19); service-side GitHub OAuth, team-membership enforcement and password-login configuration are in [service PR #33](https://github.com/peerimeter/peerimeter-service/pull/33). Its CORS allowlist, network-wide peer-list API, local development URLs, and configurable join URL HTTPS requirement are in [service PR #10](https://github.com/peerimeter/peerimeter-service/pull/10). The service supports file storage by default and PostgreSQL with migrations ([PR #16](https://github.com/peerimeter/peerimeter-service/pull/16), [PR #17](https://github.com/peerimeter/peerimeter-service/pull/17)); switching existing file data to PostgreSQL requires an operator-managed export/import. API-key login can be disabled when SSO is configured; the key remains for agent-scoped tokens. The agent supports one active network per runtime and direct-only peer connections. Per-user roles, per-device credentials, revocation/leave, MQTT, and production-verified multi-instance operation remain future work. OAuth App registration and live SSO configuration are still pending.
 
 **Website:** [peerimeter.app](https://peerimeter.app) · [Agent installer](https://agent.peerimeter.app) · [Service setup](https://service.peerimeter.app).
 
@@ -34,8 +34,10 @@ instructions](AGENTS.md#workspace-setup).
 Deploy `peerimeter-service` using the [service setup guide](https://service.peerimeter.app/).
 Configure a strong `PEERIMETER_API_KEY` on the service and set
 `PEERIMETER_PUBLIC_API_URL` to its public HTTPS URL. The join bundle contains
-that API URL and the same shared key; anyone with the bundle can administer all
-networks, so distribute it only to the machines you trust.
+that API URL and a network-scoped enrollment token derived from the service
+key. The token authorizes agent requests only for its network, so distribute it
+only to machines you trust. Rotating the management key invalidates existing
+enrollment tokens and requires agents to join again.
 
 Run the latest service image published to GHCR. The `latest` tag tracks
 versioned releases from `main`:
@@ -76,8 +78,8 @@ curl -fsS "$SERVICE_URL/api/v1/networks" \
 ```
 
 Fetch a join token for the network and pipe it directly to the agent. The token
-carries the network ID; its shared API credential still grants access to all
-networks and nodes. The agent uses the hostname as node ID unless you pass
+carries the network ID and authorizes API requests only for that network. The
+agent uses the hostname as node ID unless you pass
 `--node-id`:
 
 ```sh
