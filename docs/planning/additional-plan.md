@@ -232,7 +232,7 @@ Acceptance criteria:
 
 - Use **three distinct code repositories**, named `peerimeter-agent`, `peerimeter-service`, and `peerimeter-dashboard`; no shared monorepo or shared Go module.
 - `peerimeter-agent` contains the Go CLI, always-on service, static JSON mode, real WireGuard lifecycle for Linux/macOS/Windows, networking/routing, STUN and reconnect. The agent must compile and run without the service repository or any API.
-- `peerimeter-service` contains the central Go REST API, configuration storage, PostgreSQL, MQTT coordination, future GitHub SSO API support and management of external-client gateways. No browser frontend, desktop application, or relay.
+- `peerimeter-service` contains the central Go REST API, configuration storage, PostgreSQL, MQTT coordination, GitHub organization-team SSO, and management of external-client gateways. No browser frontend, desktop application, or relay.
 - `peerimeter-dashboard` contains the browser-only React/TypeScript UI. Its initial sign-in uses the existing service API key; it can be served separately with service CORS restricted to exact trusted origins or behind a same-origin reverse proxy. No desktop app and no relay.
 - **Build and verify the offline agent in `peerimeter-agent` before starting the implementation in `peerimeter-service`.**
 - Implement the API-key dashboard after the service exposes the required network, peer and join-bundle endpoints.
