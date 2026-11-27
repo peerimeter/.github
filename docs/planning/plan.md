@@ -37,7 +37,7 @@
 - MQTT-over-TLS event notifications for fast updates; lost notifications must be repaired by periodic reconciliation.
 - Direct endpoint discovery via STUN, endpoint candidate exchange, NAT traversal/hole punching where practical, and robust reaction to local/public IP and port changes.
 - Full handling of WireGuard state without restarting the interface on normal peer changes.
-- GitHub OAuth SSO for dashboard users is implemented in the service and dashboard: access is restricted to active members of one configured GitHub organization team. API-key login remains an environment-controlled fallback. Agent enrollment authorization and device authentication remain separate.
+- GitHub OAuth SSO for dashboard users is implemented in the service and dashboard: active membership in one configured GitHub organization team is checked at login. A session remains valid for up to 12 hours after a member is removed from the team, or until logout or service restart. API-key login remains an environment-controlled fallback. Agent enrollment authorization and device authentication remain separate.
 - Modern browser-only React dashboard with network/peer management, observable peer graph, current state, and diagnostics.
 - External **standard WireGuard clients** connecting to a selected Peerimeter gateway peer; initially NAT/SNAT mode, later optional routed mode. The gateway may forward only to explicitly authorized mesh destinations.
 - Docker Compose deployment of server, PostgreSQL, and MQTT broker.
@@ -753,7 +753,7 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 ### Phase 5 — Browser dashboard and GitHub SSO
 - [x] Separate React/TypeScript dashboard repository with API-key sign-in, network creation/listing, registered peer listing and metadata editing, plus Linux/macOS/Windows join commands. Implementation is in dashboard PR #1.
 - [x] Service CORS allowlist from environment for exact trusted browser origins, network-wide peer listing, and dashboard default API URL from `VITE_SERVICE_URL`. Service implementation is in PR #10.
-- [x] Add GitHub OAuth sign-in restricted to active members of a configurable organization team; create HttpOnly sessions, verify browser-bound OAuth state, and protect session-authenticated writes with a trusted dashboard-origin check. Service PR #33 and dashboard PR #19 are merged.
+- [x] Add GitHub OAuth sign-in requiring active membership in a configurable organization team at login; create HttpOnly sessions, verify browser-bound OAuth state, and protect session-authenticated writes with a trusted dashboard-origin check. Team membership is not rechecked during a session; sessions remain valid up to 12 hours after team removal, or until logout or service restart. Service PR #33 and dashboard PR #19 are merged.
 - [x] Make dashboard API-key login configurable from the service environment; it defaults off when GitHub SSO is configured and remains an explicit fallback.
 - [ ] Add per-user roles and account management. Current authorized team members receive the same management access.
 - [ ] Add topology graph, diagnostics and service-backed live state as those API capabilities become available.
