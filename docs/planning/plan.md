@@ -37,7 +37,7 @@
 - MQTT-over-TLS event notifications for fast updates; lost notifications must be repaired by periodic reconciliation.
 - Direct endpoint discovery via STUN, endpoint candidate exchange, NAT traversal/hole punching where practical, and robust reaction to local/public IP and port changes.
 - Full handling of WireGuard state without restarting the interface on normal peer changes.
-- Planned GitHub OAuth for dashboard users; the initial dashboard increment uses the current shared API key. Agent enrollment authorization and device authentication remain separate.
+- GitHub OAuth SSO for dashboard users is implemented in the service and dashboard: access is restricted to active members of one configured GitHub organization team. API-key login remains an environment-controlled fallback. Agent enrollment authorization and device authentication remain separate.
 - Modern browser-only React dashboard with network/peer management, observable peer graph, current state, and diagnostics.
 - External **standard WireGuard clients** connecting to a selected Peerimeter gateway peer; initially NAT/SNAT mode, later optional routed mode. The gateway may forward only to explicitly authorized mesh destinations.
 - Docker Compose deployment of server, PostgreSQL, and MQTT broker.
@@ -109,7 +109,7 @@
 | STUN | `pion/stun` (or equivalent) | Validate UDP socket/mapping behavior before relying on discovered ports |
 | Web | Vite + React + TypeScript | Separate static app in `peerimeter-dashboard`; exact allowlisted CORS when hosted apart from the API |
 | UI | Tailwind CSS + shadcn/ui | Peer graph via React Flow / XYFlow |
-| Auth | Current dashboard increment: shared service API key; planned: GitHub OAuth | Keep the shared key in tab-scoped session state; future OAuth uses secure server-side sessions |
+| Auth | GitHub OAuth team SSO plus optional shared service API key | SSO uses short-lived HttpOnly sessions; API-key login defaults off when SSO is configured |
 | Tests | Go `testing`, `httptest`, container/network integration tests | Browser E2E optional later |
 | Deployment | Docker Compose | Server, PostgreSQL, Mosquitto, reverse proxy/TLS documented |
 
@@ -124,8 +124,8 @@
 This project is **not a monorepo**. Maintain three separate code repositories with independent CI pipelines, versioning, release artifacts, and issue tracking. The two Go repositories have independent `go.mod` files:
 
 1. **`peerimeter-agent`** — headless Go CLI/background service, Linux/macOS/Windows WireGuard adapters, offline static JSON, and (later) enrollment/config sync, STUN and recovery. **Implement this repository first.**
-2. **`peerimeter-service`** — central Go REST API, configuration storage, PostgreSQL migrations, MQTT event publishing, future GitHub SSO API support, and external-client/gateway management API. Implement after the agent's offline cross-platform milestone.
-3. **`peerimeter-dashboard`** — browser-only React/TypeScript static UI consuming the service's versioned REST API. Its first increment uses the service API key; GitHub OAuth can replace it when user accounts are implemented. The service remains independently buildable and does not embed this frontend.
+2. **`peerimeter-service`** — central Go REST API, configuration storage, PostgreSQL migrations, MQTT event publishing, GitHub team SSO, and external-client/gateway management API. Implement after the agent's offline cross-platform milestone.
+3. **`peerimeter-dashboard`** — browser-only React/TypeScript static UI consuming the service's versioned REST API. It supports service API-key login and configured GitHub team SSO. The service remains independently buildable and does not embed this frontend.
 
 The local workspace contains the three code repositories and the shared `.github` planning repository; its parent is not a Git repository:
 
@@ -521,8 +521,9 @@ All protected endpoints enforce identity and network-scoped authorization; all m
 ### Dashboard/auth
 
 ```http
-GET    /api/v1/auth/github/login
-GET    /api/v1/auth/github/callback
+GET    /api/v1/auth/config
+GET    /auth/github/login
+GET    /auth/github/callback
 POST   /api/v1/auth/logout
 GET    /api/v1/me
 GET    /api/v1/networks
@@ -601,7 +602,7 @@ Use conventional HTTP status semantics and consistent error envelopes. Implement
 - Build with Vite/React/TypeScript. Serve the static assets independently or through a reverse proxy alongside the service; do not embed the frontend in the Go binary.
 - When the app and API use different origins, enable service CORS only for exact trusted origins; never use wildcard origins.
 - Pages: Overview, Networks, Peers, Topology Graph, Gateways, External Clients, Diagnostics, Settings.
-- The initial dashboard increment uses the current shared API key, stored only for the active browser tab session. Later add GitHub OAuth and enforce admin/user controls in the backend, not just hidden in the frontend.
+- The dashboard supports a shared API key stored only for the active browser tab session and GitHub OAuth SSO restricted by service-side team membership checks. API-key login defaults off when SSO is configured. SSO currently grants team members the same management access; per-user roles and account management remain future work.
 - Topology graph uses **observed actual** connectivity, not merely desired mesh edges. Show online/offline, direct connectivity, last seen, last handshake, actual measured RTT where available, gateway role, and endpoint/reconnect history.
 - Avoid displaying public endpoint data to unauthorized users. Mask secrets. Do not invent metrics when no agent measurement exists.
 - Real-time updates via SSE initially (simpler than WS); reconnect with backoff and initial snapshot reload.
@@ -752,12 +753,14 @@ Build a reproducible `make test`, `make test-integration`, `make test-network` w
 ### Phase 5 — Browser dashboard and GitHub SSO
 - [x] Separate React/TypeScript dashboard repository with API-key sign-in, network creation/listing, registered peer listing and metadata editing, plus Linux/macOS/Windows join commands. Implementation is in dashboard PR #1.
 - [x] Service CORS allowlist from environment for exact trusted browser origins, network-wide peer listing, and dashboard default API URL from `VITE_SERVICE_URL`. Service implementation is in PR #10.
-- [ ] Replace the shared API key with GitHub OAuth and user roles when service-side user accounts are implemented.
+- [x] Add GitHub OAuth sign-in restricted to active members of a configurable organization team; create HttpOnly sessions, verify browser-bound OAuth state, and protect session-authenticated writes with a trusted dashboard-origin check. Service PR #33 and dashboard PR #19 are merged.
+- [x] Make dashboard API-key login configurable from the service environment; it defaults off when GitHub SSO is configured and remains an explicit fallback.
+- [ ] Add per-user roles and account management. Current authorized team members receive the same management access.
 - [ ] Add topology graph, diagnostics and service-backed live state as those API capabilities become available.
 - [ ] Show actual connection observations and diagnostics, not fabricated live status.
 - [ ] Add production static hosting and document HTTPS reverse-proxy deployment.
 
-**Done when:** users can securely sign in, administer networks/peers, and create join bundles through the browser; OAuth, observed-state graph and diagnostics must match actual API capabilities.
+**Done when:** users can securely sign in, administer networks/peers, and create join bundles through the browser; SSO implementation is merged, but OAuth App registration and production environment configuration still need deployment verification. Observed-state graph and diagnostics must match actual API capabilities.
 
 ### Phase 6 — External WireGuard clients via Linux gateway
 - [ ] Gateway external WG interface, separate address pool and client registration/revocation.
@@ -828,9 +831,9 @@ Update this section whenever a phase is finished or an important design constrai
 | 0 — Baseline | Complete | Native Go 1.27.4 baseline and backend feasibility verified on all three; operational tunnel/IPC commands belong to Phase 1 |
 | 1 — Offline WG on Linux/macOS/Windows | Complete (core) | Native agent/service/installer scope passed independent review; latest build/test and integration CI passed; native verification of later `wg show` CLI changes and the STUN add-on remains pending |
 | 2 — Agent self-update | Complete | Native updater build/test, installed-binary E2E, integration, package and review gates passed in agent PRs #37–#39 |
-| 3 — Server + sync | Not started | |
-| 4 — NAT + self-healing | Not started | |
-| 5 — Web dashboard | Not started | |
+| 3 — Server + sync | In progress | Service API, managed agent join and registration sync are implemented; concurrent service-driven multi-network operation and durable scoped credentials remain open. |
+| 4 — NAT + self-healing | In progress | Direct endpoint discovery is partial; native LAN/NAT traversal and network-change recovery remain unverified. |
+| 5 — Web dashboard | In progress | API-key and GitHub team SSO sign-in are implemented; production OAuth configuration, user roles, topology, diagnostics and hosting verification remain open. |
 | 6 — External gateway | Not started | |
 | 7 — Cross-platform resilience | Not started | |
 | 8 — Release hardening | Not started | |
