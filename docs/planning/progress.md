@@ -19,14 +19,17 @@ dashboard PR
 [`7287159800a75ee6d54926207553fa1dabdd4cce`](https://github.com/peerimeter/peerimeter-dashboard/commit/7287159800a75ee6d54926207553fa1dabdd4cce).
 
 The service checks active membership in the configured GitHub organization/team
-at login only, uses browser-bound one-time OAuth state and 12-hour HttpOnly
-sessions, and validates the configured dashboard origin for cookie-authenticated
-writes. Removing a user from the team does not revoke an existing session; it
-remains valid until logout, expiry or service restart.
+at login, uses browser-bound signed OAuth state and 12-hour HttpOnly session
+cookies, and validates the configured dashboard origin for cookie-authenticated
+writes. OAuth state and sessions are stateless and work across replicas sharing
+the signing secret. Removing a user from the team does not revoke an existing
+session; a copied cookie remains valid until expiry or secret rotation.
 `PEERIMETER_PASSWORD_LOGIN_ENABLED` controls API-key login; it defaults to false
 with SSO and true without SSO. SSO team members currently share management
-access; user roles are not implemented. Sessions are held in memory and end on
-logout, expiry or service restart.
+access; user roles are not implemented. API-key dashboard login exchanges the
+key for the same signed session format used by SSO, with the username
+`superadmin`; GitHub sessions use the account login as the username. The
+dashboard stores neither API keys nor GitHub access tokens in session storage.
 
 Local service validation passed: `go test ./...`, `go vet ./...`,
 `go build ./...`, and `git diff --check`. Local dashboard validation passed:
@@ -41,21 +44,26 @@ and live GitHub/OAuth behavior is not yet verified.
 
 ## Stateless SSO and dashboard sessions — 2026-11-27
 
-Open follow-up PRs [service #34](https://github.com/peerimeter/peerimeter-service/pull/34)
-and [dashboard #20](https://github.com/peerimeter/peerimeter-dashboard/pull/20)
-propose replacing process-local OAuth/session state with signed, expiring payloads that
-work across replicas sharing `PEERIMETER_AUTH_SESSION_SECRET` (or, without SSO,
-the derived API-key signing key). API-key login exchanges the key for the same
-session-cookie format as SSO. Dashboard session storage contains only the
+Service PR [#34](https://github.com/peerimeter/peerimeter-service/pull/34)
+merged at [`ad9c3aa`](https://github.com/peerimeter/peerimeter-service/commit/ad9c3aaaef3dc630f2870a49d26671834485a464);
+dashboard PR [#20](https://github.com/peerimeter/peerimeter-dashboard/pull/20)
+merged at [`89ed2bf`](https://github.com/peerimeter/peerimeter-dashboard/commit/89ed2bfde04a8bdf6c7470e387969d3e36c33f20).
+They replace process-local OAuth/session state with signed, expiring payloads
+that work across replicas sharing `PEERIMETER_AUTH_SESSION_SECRET` (or, without
+SSO, the derived API-key signing key). API-key login exchanges the key for the
+same session-cookie format as SSO. Dashboard session storage contains only the
 service URL and session mode; the sidebar displays `superadmin` or the GitHub
-login. The service tests exercise OAuth state across instances and a cookie
-issued by one instance on another.
+login. Service tests exercise OAuth state across instances and a cookie issued
+by one instance on another.
 
 Local verification passed: service `go test ./...`, `go vet ./...`,
 `go build ./...`; dashboard `npm test` (22 tests), `npm run lint`, and
-`npm run build`; `git diff --check` in both repositories. Hosted checks and
-automated review are pending. Logout clears the browser cookie; a copied signed
-cookie remains valid until the 12-hour expiry or secret rotation.
+`npm run build`; `git diff --check` in both repositories. Required hosted CI
+passed in both PRs; dashboard Playwright E2E and Cloudflare Workers builds also
+passed. CodeRabbit returned neutral after its review allowance was exhausted;
+its actionable findings were verified and fixed, and all review threads were
+resolved. Logout clears the browser cookie; a copied signed cookie remains
+valid until the 12-hour expiry or secret rotation.
 
 ## Infrastructure provider evaluation — 2026-11-18
 
@@ -152,8 +160,8 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `abe8ff1` (main; PR #71 merge; sync PR head `e8507bc`) | 🔄 Managed join, registration refresh and peer reconciliation | PR #71 CI run [44194689880](https://github.com/peerimeter/peerimeter-agent/actions/runs/44194689880) passed build/tests, integration and package jobs on Linux, macOS and Windows; action-lock and CodeRabbit passed. It fixed a macOS uninstall race where a runtime marker could disappear between metadata and extended-permission checks. Post-merge CI [44195585597](https://github.com/peerimeter/peerimeter-agent/actions/runs/44195585597) passed all jobs, including macOS integration. |
-| `peerimeter-service` | `cf42f40` (main; SSO PR #33 merged) | 🔄 Stateless session PR #34 | Local Go tests, vet and build pass. PR #34 hosted checks and CodeRabbit review are pending. |
-| `peerimeter-dashboard` | `7287159` (main; SSO PR #19 merged) | 🔄 Stateless session PR #20 | Local tests (22), lint and build pass. PR #20 hosted checks and CodeRabbit review are pending. |
+| `peerimeter-service` | `ad9c3aa` (main; PR #34 merged) | 🔄 PostgreSQL storage, network API and GitHub team SSO | PR #34 required CI passed; CodeRabbit returned neutral after the review allowance was exhausted. Its findings were fixed and all threads resolved. Local Go tests, vet and build passed. |
+| `peerimeter-dashboard` | `89ed2bf` (main; PR #20 merged) | 🔄 API-key and GitHub SSO dashboard | PR #20 `check` and optional Workers build passed, including Playwright E2E; CodeRabbit returned neutral after the review allowance was exhausted. Its findings were fixed and all threads resolved. Local tests (22), lint and build passed. |
 
 ## Completed work
 
