@@ -30,7 +30,7 @@ logout, expiry or service restart.
 
 Local service validation passed: `go test ./...`, `go vet ./...`,
 `go build ./...`, and `git diff --check`. Local dashboard validation passed:
-`npm test` (22 tests), `npm run lint`, `npm run build`, and
+`npm test` (20 tests), `npm run lint`, `npm run build`, and
 `npm audit --audit-level=moderate` (0 vulnerabilities). Hosted service required
 checks passed. Dashboard `check` passed; the final CodeRabbit check was
 rate-limited/neutral after the first review's valid findings were fixed. The
