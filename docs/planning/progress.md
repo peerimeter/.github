@@ -30,7 +30,7 @@ logout, expiry or service restart.
 
 Local service validation passed: `go test ./...`, `go vet ./...`,
 `go build ./...`, and `git diff --check`. Local dashboard validation passed:
-`npm test` (20 tests), `npm run lint`, `npm run build`, and
+`npm test` (22 tests), `npm run lint`, `npm run build`, and
 `npm audit --audit-level=moderate` (0 vulnerabilities). Hosted service required
 checks passed. Dashboard `check` passed; the final CodeRabbit check was
 rate-limited/neutral after the first review's valid findings were fixed. The
@@ -38,6 +38,24 @@ optional Cloudflare Workers build check failed without a diagnostic in GitHub's
 check summary. Playwright E2E was attempted but could not launch because the
 local Chromium executable is missing. The OAuth App has not been registered
 and live GitHub/OAuth behavior is not yet verified.
+
+## Stateless SSO and dashboard sessions — 2026-11-27
+
+Open follow-up PRs [service #34](https://github.com/peerimeter/peerimeter-service/pull/34)
+and [dashboard #20](https://github.com/peerimeter/peerimeter-dashboard/pull/20)
+propose replacing process-local OAuth/session state with signed, expiring payloads that
+work across replicas sharing `PEERIMETER_AUTH_SESSION_SECRET` (or, without SSO,
+the derived API-key signing key). API-key login exchanges the key for the same
+session-cookie format as SSO. Dashboard session storage contains only the
+service URL and session mode; the sidebar displays `superadmin` or the GitHub
+login. The service tests exercise OAuth state across instances and a cookie
+issued by one instance on another.
+
+Local verification passed: service `go test ./...`, `go vet ./...`,
+`go build ./...`; dashboard `npm test` (22 tests), `npm run lint`, and
+`npm run build`; `git diff --check` in both repositories. Hosted checks and
+automated review are pending. Logout clears the browser cookie; a copied signed
+cookie remains valid until the 12-hour expiry or secret rotation.
 
 ## Infrastructure provider evaluation — 2026-11-18
 
@@ -78,7 +96,7 @@ A passed test alone does not mean the phase is complete; Phase 1 and later also 
 | 2 — Agent self-update | ✅ Complete | Inventory-aware HTTPS/SHA256SUMS update, confirmation/`--yes`, rollback/recovery, progress reporting; native CI and review passed in agent PRs #37–#39 |
 | 3 — Server + join bundles + sync | 🔄 In progress | Service API, join bundles, managed agent join and network/node peer exchange are implemented. Agent PRs #68–#70 make sync target the running configuration, refresh the node's public-key/underlay registration, then fetch and apply peers; `--network-id` defaults only when one joined network exists and is required when multiple are saved. The flag does not provide concurrent network runtimes: sync verifies the selected network matches the active agent. The agent `config` CLI command was removed in PR #69; sync does not upload peer config. The current `enrollment_token` is a deterministic HMAC-derived bearer credential scoped to one network; one-time, expiring and revocable device credentials remain future work. Service PRs #16/#17 added selectable file/PostgreSQL storage and migrations, PostgreSQL 18.7 Alpine in the single Compose file, and deployment docs. The legacy file-to-PostgreSQL import path was subsequently removed; switching storage requires an operator-managed export/import. Devbox PostgreSQL 18.6, direnv loading and manual migration/backup guidance are implemented. PR #17 CI and CodeRabbit passed; local Go tests/vet/build and PostgreSQL integration tests against Devbox 18.6 passed. A Supabase-hosted test remains unverified: the authenticated CLI returned `Resource has been removed` when creating `peerimeter-test`, and no project or charge resulted. Concurrent network service management, durable agent credentials, background/service-driven reconciliation, MQTT and host-file DNS remain outstanding |
 | 4 — NAT traversal + self-healing | 🔄 In progress | User-prioritized increment adds primary-interface underlay reporting and best-effort direct UDP discovery; no relay. Native LAN/NAT traversal and network-change recovery remain unverified |
-| 5 — Browser dashboard + GitHub SSO | 🔄 In progress | Dashboard PR #1 provides API-key sign-in and management UI. SSO is implemented in service PR #33 and dashboard PR #19 with active organization-team membership checks and service-controlled API-key login. Production OAuth App configuration/live verification, per-user roles, topology, diagnostics and hosting documentation remain outstanding. |
+| 5 — Browser dashboard + GitHub SSO | 🔄 In progress | Dashboard PR #1 provides API-key sign-in and management UI. SSO is implemented in service PR #33 and dashboard PR #19 with active organization-team membership checks and service-controlled API-key login. Follow-up PRs add stateless, shared signed sessions and OAuth state, API-key-to-session exchange, and username display. Production OAuth App configuration/live verification, per-user roles, topology, diagnostics and hosting documentation remain outstanding. |
 | 6 — External WireGuard client gateway | ⬜ Not started | |
 | 7 — Cross-platform resilience + packaging | ⬜ Not started | |
 | 8 — Release and hardening | ⬜ Not started | |
@@ -134,8 +152,8 @@ Status must be one of: **not run / passed / failed / blocked**. Do not change an
 | Repository | Last verified commit | Active work | Tests |
 |---|---|---|---|
 | `peerimeter-agent` | `abe8ff1` (main; PR #71 merge; sync PR head `e8507bc`) | 🔄 Managed join, registration refresh and peer reconciliation | PR #71 CI run [44194689880](https://github.com/peerimeter/peerimeter-agent/actions/runs/44194689880) passed build/tests, integration and package jobs on Linux, macOS and Windows; action-lock and CodeRabbit passed. It fixed a macOS uninstall race where a runtime marker could disappear between metadata and extended-permission checks. Post-merge CI [44195585597](https://github.com/peerimeter/peerimeter-agent/actions/runs/44195585597) passed all jobs, including macOS integration. |
-| `peerimeter-service` | `cf42f40` (main; SSO PR #33 merged) | 🔄 PostgreSQL storage, network API and GitHub team SSO | SSO PR `verify`, `action-lock` and aggregate `check` passed; CodeRabbit findings on OAuth-state binding and session CSRF were fixed and threads resolved. Local Go tests, vet and build passed. |
-| `peerimeter-dashboard` | `7287159` (main; SSO PR #19 merged) | 🔄 API-key and GitHub SSO dashboard | PR `check` passed; current post-update CodeRabbit status was rate-limited/neutral after valid findings were fixed. Optional Workers build check failed without a diagnostic in the GitHub summary. Local tests (20), lint, build and audit passed; Playwright E2E could not launch because Chromium is unavailable. |
+| `peerimeter-service` | `cf42f40` (main; SSO PR #33 merged) | 🔄 Stateless session PR #34 | Local Go tests, vet and build pass. PR #34 hosted checks and CodeRabbit review are pending. |
+| `peerimeter-dashboard` | `7287159` (main; SSO PR #19 merged) | 🔄 Stateless session PR #20 | Local tests (22), lint and build pass. PR #20 hosted checks and CodeRabbit review are pending. |
 
 ## Completed work
 
